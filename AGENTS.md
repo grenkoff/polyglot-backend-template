@@ -102,6 +102,11 @@ Allowed:
 - One logical change per commit; `make check` passes before every commit.
 - commitlint checks all of this in CI (`commitlint.config.mjs`,
   `make commitlint`).
+- **Do not merge bot pull requests (Dependabot) on GitHub**: GitHub adds
+  `Signed-off-by` / `Co-authored-by` trailers and the bot as the author.
+  Apply the change locally instead, commit it with the pull request title
+  plus its number as the only line (`ci(deps): bump actions/checkout from
+  5 to 7 (#1)`), push to `main`; the bot closes its pull request itself.
 
 ## Commands
 
