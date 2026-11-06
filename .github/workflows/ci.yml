@@ -53,6 +53,7 @@ jobs:
           format: true
           breaking: ${{ github.event_name == 'pull_request' }}
           breaking_against: ${{ github.event.repository.clone_url }}#branch=${{ github.base_ref }}
+          pr_comment: false
           push: false
       - uses: astral-sh/setup-uv@v6
       - name: Python code generated from proto/ is up to date
