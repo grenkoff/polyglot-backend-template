@@ -2,9 +2,19 @@ use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
 use syn::{
     Expr, Fields, GenericArgument, ImplItem, ImplItemFn, ItemEnum, ItemFn, ItemImpl, ItemMod,
-    ItemStatic, ItemStruct, ItemTrait, PathArguments, ReturnType, Stmt, TraitItem, Type,
-    Visibility,
+    ItemStatic, ItemStruct, ItemTrait, PathArguments, Receiver, ReceiverKind, ReturnType, Stmt,
+    TraitItem, Type, Visibility,
 };
+
+pub trait Mutation {
+    fn mutates(&self) -> bool;
+}
+
+impl Mutation for Receiver {
+    fn mutates(&self) -> bool {
+        self.mutability.is_some() || matches!(self.kind, ReceiverKind::Reference(_, _, Some(_)))
+    }
+}
 
 use crate::attributes::{Attributes, Marks};
 use crate::finding::Finding;
@@ -196,7 +206,7 @@ impl Verdict for Method<'_> {
             ),
             (
                 "EO003",
-                receiver.is_some_and(|it| it.mutability.is_some()),
+                receiver.is_some_and(Mutation::mutates),
                 format!("`{name}` takes `&mut self`, objects must be immutable"),
             ),
             (
@@ -302,12 +312,7 @@ impl<'ast> Visit<'ast> for Inspection {
                         format!("`{name}` is a getter or setter, name it after what it returns"),
                     ));
                 }
-                if method
-                    .sig
-                    .receiver()
-                    .is_some_and(|receiver| receiver.mutability.is_some())
-                    && !marks.waives("EO003")
-                {
+                if method.sig.receiver().is_some_and(Mutation::mutates) && !marks.waives("EO003") {
                     self.findings.push(Finding::new(
                         &self.file,
                         method.sig.ident.span().start().line,
@@ -456,6 +461,13 @@ mod tests {
     fn rejects_mutable_objects() {
         let code = "trait Cell { fn put(&mut self, v: u8); }
             struct Cat; impl Cat { fn grow(&mut self) {} }";
+        assert_eq!(rules(code), ["EO003", "EO003"]);
+    }
+
+    #[test]
+    fn rejects_objects_mutated_by_value() {
+        let code = "trait Cell { fn put(mut self, v: u8); }
+            struct Cat; impl Cat { fn grow(mut self) {} fn age(&self) {} fn pass(self) {} }";
         assert_eq!(rules(code), ["EO003", "EO003"]);
     }
 
