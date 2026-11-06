@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "ms-vscode-remote.remote-wsl",
+    "anthropic.claude-code",
+    "rust-lang.rust-analyzer",
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker",
+    "astral-sh.ty",
+    "bufbuild.vscode-buf",
+    "tamasfe.even-better-toml",
+    "ms-azuretools.vscode-containers",
+    "editorconfig.editorconfig"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "rust-analyzer.check.command": "clippy",
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true,
+    "editor.rulers": [100]
+  },
+
+  "python.analysis.extraPaths": ["services/core"],
+  "mypy-type-checker.cwd": "${workspaceFolder}/services/core",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.rulers": [80]
+  },
+
+  "files.readonlyInclude": {
+    "services/core/server/contracts/**": true
+  },
+  "search.exclude": {
+    "**/target": true,
+    "**/node_modules": true,
+    "**/mutants": true,
+    "mutants.out*": true,
+    "services/core/htmlcov": true
+  }
+}

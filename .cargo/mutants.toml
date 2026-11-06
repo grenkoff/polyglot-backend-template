@@ -1,0 +1,2 @@
+exclude_globs = ["**/main.rs", "**/build.rs"]
+gitignore = true

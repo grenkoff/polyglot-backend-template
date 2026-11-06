@@ -1,0 +1,86 @@
+# polyglot-backend-template
+
+A starting point for backend projects built by AI agents and humans:
+microservices with a **Django** main service and **Rust** services around it,
+written in [Elegant Objects](https://www.elegantobjects.org/) style and
+checked by strict CI.
+
+| | |
+|---|---|
+| Main service | Django from [wemake-django-template](https://github.com/wemake-services/wemake-django-template), API on [django-modern-rest](https://github.com/wemake-services/django-modern-rest) |
+| Python style | [wemake-python-styleguide](https://github.com/wemake-services/wemake-python-styleguide), ruff, mypy strict, 100% coverage, schemathesis |
+| Other services | Rust: [axum](https://github.com/tokio-rs/axum), [tonic](https://github.com/hyperium/tonic), [async-nats](https://github.com/nats-io/nats.rs) |
+| Rust style | Elegant Objects on 100%: clippy pedantic + [`eo-lint`](tools/eo-lint) |
+| Communication | gRPC contracts in [`proto/`](proto) ([buf](https://buf.build)), events over [NATS](https://nats.io) |
+| Runtime | Docker Compose, PostgreSQL |
+
+## Start a new project
+
+```bash
+gh repo create my-backend --template grenkoff/polyglot-backend-template --private --clone
+cd my-backend
+make env      # creates services/core/config/.env
+make up       # starts everything on http://localhost:8000
+make e2e      # checks that a request goes through all services
+```
+
+Then tell your AI agent what to build. It reads [`AGENTS.md`](AGENTS.md)
+(Claude Code reads it through [`CLAUDE.md`](CLAUDE.md)).
+
+## What is inside
+
+```
+proto/               gRPC contracts, the single source of truth
+services/core/       Django main service (public HTTP API, admin, database)
+services/hello/      example Rust service (gRPC + health check + NATS events)
+tools/eo-lint/       Elegant Objects linter for Rust
+scripts/             code generation and end-to-end check
+docs/                architecture and coding rules
+compose.yml          the whole system
+```
+
+The example request flow:
+
+```
+POST /api/v1/greetings/ ─▶ core ─gRPC─▶ hello ─▶ NATS hello.v1.greeted ─▶ core-events
+```
+
+Keep `hello` and the `greetings` app as a reference until your own services
+exist, then delete them.
+
+## Checks
+
+`make check` runs everything that CI runs:
+
+| Job | What it checks |
+|-----|----------------|
+| commits | commit messages and pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), one line |
+| contracts | `buf lint`, `buf format`, breaking changes on pull requests, generated Python code is up to date |
+| rust | `cargo fmt`, clippy pedantic (warnings are errors), tests with 100% line coverage (cargo-llvm-cov), `eo-lint` |
+| rust-mutants | mutation testing with cargo-mutants: no mutant may survive |
+| core | the full wemake-django-template pipeline: ruff, wemake-python-styleguide, import-linter, mypy, pytest with 100% coverage, schemathesis + tracecov, Django deploy checks, migration linters, deptry, codespell, typos, yamllint; mutation testing with mutmut; plus [ty](https://github.com/astral-sh/ty) as a second, non-blocking type checker |
+| e2e | `docker compose up` and a request through every service |
+
+## Test-driven development
+
+Code is written test-first, see [docs/tdd.md](docs/tdd.md). For AI agents
+it is enforced by the [Probity](https://github.com/nizos/probity) hook
+(`npm install` once, then run the agent where the code lives); for
+everyone by 100% coverage and mutation testing in CI.
+
+## Requirements
+
+Linux, macOS or WSL2 with Docker, Rust (`rustup`, plus
+`cargo install cargo-llvm-cov cargo-mutants`), `protoc`,
+[uv](https://docs.astral.sh/uv/) and Node.js 22+ (for the TDD hook).
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Elegant Objects rules](docs/elegant-objects.md)
+- [Rules for AI agents](AGENTS.md)
+- [Django service](services/core/README.md)
+
+## License
+
+[MIT](LICENSE)

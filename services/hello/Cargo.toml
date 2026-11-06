@@ -1,0 +1,31 @@
+[package]
+name = "hello"
+version = "0.1.0"
+description = "Example Rust microservice: gRPC greetings and NATS events"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-nats.workspace = true
+axum.workspace = true
+prost.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+futures = "0.3.34"
+testcontainers-modules = { version = "0.15.0", features = ["nats"] }
+tower = { version = "0.5", features = ["util"] }
+
+[build-dependencies]
+tonic-prost-build.workspace = true
+
+[lints]
+workspace = true

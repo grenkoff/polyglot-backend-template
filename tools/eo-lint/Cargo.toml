@@ -1,0 +1,17 @@
+[package]
+name = "eo-lint"
+version = "0.1.0"
+description = "Checks Rust code against Elegant Objects rules that clippy cannot express"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+proc-macro2.workspace = true
+syn.workspace = true
+thiserror.workspace = true
+walkdir.workspace = true
+
+[lints]
+workspace = true

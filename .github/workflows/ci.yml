@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commits:
+    name: Commit messages (Conventional Commits)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - name: Pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s' "$TITLE" | npx --no-install commitlint --verbose
+      - name: Pushed commits
+        if: github.event_name == 'push'
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            npx --no-install commitlint --from "$BEFORE" --to "$AFTER" --verbose
+          else
+            npx --no-install commitlint --last --verbose
+          fi
+
+  contracts:
+    name: Contracts (buf, generated code)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: bufbuild/buf-action@v1
+        with:
+          lint: true
+          format: true
+          breaking: ${{ github.event_name == 'pull_request' }}
+          breaking_against: ${{ github.event.repository.clone_url }}#branch=${{ github.base_ref }}
+          push: false
+      - uses: astral-sh/setup-uv@v6
+      - name: Python code generated from proto/ is up to date
+        run: |
+          ./scripts/proto.sh
+          git add --intent-to-add services/core/server/contracts
+          git diff --exit-code -- services/core/server/contracts
+
+  rust:
+    name: Rust (fmt, clippy, 100% coverage, eo-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: Install toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
+      - run: make rust
+
+  rust-mutants:
+    name: Rust mutation testing (cargo-mutants)
+    needs: rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: Install toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-mutants
+      - uses: Swatinem/rust-cache@v2
+      - run: make mutants-rust
+      - name: Surviving mutants
+        if: failure()
+        run: cat mutants.out/missed.txt
+
+  core:
+    name: Django (wemake-django-template CI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: make env
+      - name: Build image
+        working-directory: services/core
+        run: docker compose build web
+      - name: Lint, type check, test
+        working-directory: services/core
+        run: docker compose run --user=root --rm web ./docker/django/ci.sh
+      - name: Mutation testing (mutmut)
+        working-directory: services/core
+        run: docker compose run --user=root --rm web ./docker/django/mutants.sh
+      - name: ty (second type checker, non-blocking)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        working-directory: services/core
+        run: docker compose run --rm --no-deps web ty check --output-format github
+
+  e2e:
+    name: End-to-end (docker compose)
+    needs: [rust, rust-mutants, core]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start the system
+        run: make up
+      - name: Request goes through every service
+        run: ./scripts/e2e.sh
+      - name: Logs
+        if: failure()
+        run: docker compose logs --tail 100
+      - name: Stop
+        if: always()
+        run: docker compose down --volumes

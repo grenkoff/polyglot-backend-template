@@ -1,0 +1,420 @@
+[project]
+name = "core"
+description = "Core"
+version = "0.1.0"
+requires-python = "==3.14.8"
+readme = "README.md"
+authors = []
+dynamic = ["dependencies", "classifiers"]
+
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+package-mode = false
+classifiers = [
+  "Private :: Do not Upload",
+]
+
+[tool.poetry.dependencies]
+django = { version = ">=6.1,<6.2", extras = ["argon2"] }
+django-cors-headers = "^4.0"
+django-split-settings = "^1.3"
+django-axes = "^8.0"
+django-csp = "^4.0"
+django-health-check = "^4.5"
+django-permissions-policy = "^4.31"
+django-stubs-ext = "^6.0"
+django-modern-rest = { version = "^0.16", extras = ["msgspec", "pydantic", "attrs", "jwt", "openapi"] }
+
+psycopg2-binary = "^2.9"
+gunicorn = "^26.0"
+python-decouple = "^3.8"
+structlog = "^26.1"
+punq = "^0.9"
+
+grpcio = "^1.85"
+protobuf = "^7.36"
+nats-py = "^2.16"
+
+[tool.poetry.group.dev.dependencies]
+django-debug-toolbar = "^8.0"
+django-migration-linter = "^6.0"
+django-safe-migrations = "^0.7"
+django-extra-checks = "^0.17"
+django-query-counter = "^0.7"
+django-zeal = "^2.2"
+django-drifter = "^0.1"
+
+wemake-python-styleguide = { version = "^1.6", extras = ["mcp"] }
+ruff = "^0.17"
+
+pytest = "^9.1"
+pytest-django = "^4.9"
+pytest-cov = "^7.1"
+covdefaults = "^2.3"
+django-coverage-plugin = "^3.1"
+pytest-randomly = "^5.0"
+pytest-timeout = "^2.3"
+django-test-migrations = "^1.5"
+hypothesis = "^6.155"
+schemathesis = "^4.21"
+tracecov = "^0.25"
+inline-snapshot = "^0.34"
+inline-snapshot-django = "^1.4"
+
+django-stubs = { version = ">=6.1,<6.2", extras = ["compatible-mypy"] }
+types-grpcio = ">=1.0"
+types-protobuf = ">=6.32"
+ty = ">=0.0.99"
+mutmut = "^3.8"
+
+djangofmt = "^1.0"
+yamllint = "^1.35"
+pip-audit = "^2.10"
+dotenv-linter = "^0.9"
+import-linter = "^2.12"
+polint = "^0.5"
+dennis = "^1.1"
+dump-env = "^1.5"
+ipython = "^9.14"
+deptry = "^0.25"
+codespell = "^2.4"
+typos = "^1.49"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "^9.1"
+sphinx-autodoc-typehints = "^3.12"
+myst-parser = "^5.0"
+shibuya = "^2026.7"
+sphinx-llm-friendly = "^0.7"
+
+
+[tool.ruff]
+# Ruff config: https://docs.astral.sh/ruff/settings
+preview = true
+fix = true
+output-prefer-rule-codes = true
+target-version = "py314"
+line-length = 80
+extend-exclude = ["server/contracts", "mutants"]
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+  "A",    # flake8-builtins
+  "ASYNC",
+  "B",    # flake8-bugbear
+  "C4",   # flake8-comprehensions
+  "C90",  # maccabe
+  "COM",  # flake8-commas
+  "DTZ",  # flake8-datetimez
+  "E",    # pycodestyle
+  "ERA",  # flake8-eradicate
+  "EXE",  # flake8-executable
+  "F",    # pyflakes
+  "FA",   # flake8-future-annotations
+  "FBT",  # flake8-boolean-trap
+  "FLY",  # pyflint
+  "FURB", # refurb
+  "G",    # flake8-logging-format
+  "I",    # isort
+  "ICN",  # flake8-import-conventions
+  "ISC",  # flake8-implicit-str-concat
+  "LOG",  # flake8-logging
+  "N",    # pep8-naming
+  "PERF", # perflint
+  "PIE",  # flake8-pie
+  "PL",   # pylint
+  "PT",   # flake8-pytest-style
+  "PTH",  # flake8-use-pathlib
+  "Q",    # flake8-quotes
+  "RET",  # flake8-return
+  "RSE",  # flake8-raise
+  "RUF",  # ruff
+  "S",    # flake8-bandit
+  "SIM",  # flake8-simpify
+  "SLF",  # flake8-self
+  "SLOT", # flake8-slots
+  "T100", # flake8-debugger
+  "TRY",  # tryceratops
+  "UP",   # pyupgrade
+  "W",    # pycodestyle
+  "YTT",  # flake8-2020
+]
+ignore = [
+  "A005",   # allow to shadow stdlib and builtin module names
+  # Different doc rules that we don't really care about:
+  "D100",
+  "D104",
+  "D106",
+  "D203",
+  "D212",
+  "D401",
+  "D404",
+  "D405",
+  "ISC001",  # implicit string concat conflicts with `ruff format`
+  "ISC003",  # prefer explicit string concat over implicit concat
+  "PLR09",   # we have our own complexity rules
+  "PLR2004", # do not report magic numbers
+  "PLR6301", # do not require classmethod / staticmethod when self not used
+  "RUF067",  # wps handles `__init__.py` logic better
+  "TRY003",  # long exception messages from `tryceratops`
+  "RUF105",  # we prefer `# noqa`, over `# ruff` comments
+  "RUF106",  #
+  "RUF201",  #
+]
+external = ["WPS"]
+
+# Plugin configs:
+flake8-quotes.inline-quotes = "single"
+mccabe.max-complexity = 6
+pydocstyle.convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"server/apps/*/migrations/*.py" = ["D101", "E501", "RUF012"]
+"server/common/typing/*.py" = ["F401"]
+"server/implemented.py" = ["PLC0415", "D103"]
+"tests/*.py" = ["S101"]
+
+
+[tool.pytest.ini_options]
+# pytest configuration:
+# https://docs.pytest.org/en/stable/customize.html
+
+# pytest-django configuration:
+# https://pytest-django.readthedocs.io/en/latest/
+DJANGO_SETTINGS_MODULE = "server.settings"
+
+# Timeout for tests, so they can not take longer
+# than this amount of seconds.
+# You should adjust this value to be as low as possible.
+# Configuration:
+# https://pypi.org/project/pytest-timeout/
+timeout = 5
+
+# Strict `@xfail` by default:
+xfail_strict = true
+
+# Directories that are not visited by pytest collector:
+norecursedirs = [
+  "*.egg",
+  ".eggs",
+  "dist",
+  "build",
+  "docs",
+  ".tox",
+  ".git",
+  "__pycache__",
+  ".hypothesis",
+  "mutants",
+]
+
+# You will need to measure your tests speed with `-n auto` and without it,
+# so you can see whether it gives you any performance gain, or just gives
+# you an overhead. See `docs/template/development-process.rst`.
+addopts = [
+  "--strict-markers",
+  "--strict-config",
+  "--doctest-modules",
+  "--fail-on-template-vars",
+  # Output:
+  "--tb=short",
+  # Coverage:
+  "--cov=server",
+  "--cov=tests",
+  "--cov-branch",
+  "--cov-report=term-missing:skip-covered",
+  "--cov-report=html",
+  "--cov-report=xml",
+  "--cov-fail-under=100",
+  # Tracecov:
+  "--tracecov-format=text,html,markdown",
+  "--tracecov-fail-under-operations=100",
+  "--tracecov-fail-under-examples=100",
+  "--tracecov-fail-under-parameters=100",
+  "--tracecov-fail-under-keywords=100",
+  # Framework-level responses like 406 and 422 are documented in OpenAPI,
+  # but they are not always reachable through regular Schemathesis input generation.
+  "--tracecov-fail-under-responses=50",
+]
+
+# Fail on warnings:
+filterwarnings = ["error"]
+
+
+[tool.coverage.run]
+# Coverage configuration:
+# https://coverage.readthedocs.io/en/latest/config.html
+# TODO: Remove this when django_coverage_plugin supports the sysmon core.
+core = "ctrace"
+plugins = [
+  # Docs: https://github.com/nedbat/django_coverage_plugin
+  "django_coverage_plugin",
+  # Docs: https://pypi.org/project/covdefaults
+  "covdefaults",
+]
+
+omit = [
+  "server/contracts/*",
+  # Is not reported, because is imported during setup:
+  "server/settings/components/logging.py",
+]
+
+
+[tool.mypy]
+# Mypy configuration:
+# https://mypy.readthedocs.io/en/latest/config_file.html
+enable_error_code = [
+  "truthy-bool",
+  "truthy-iterable",
+  "redundant-expr",
+  "unused-awaitable",
+  "ignore-without-code",
+  "possibly-undefined",
+  "redundant-self",
+  "explicit-override",
+  "unimported-reveal",
+  "deprecated",
+  "exhaustive-match",
+]
+
+explicit_package_bases = true
+exclude = ["^mutants/"]
+ignore_missing_imports = true
+extra_checks = true
+strict = true
+strict_equality_for_none = true
+warn_unreachable = true
+
+plugins = ["mypy_django_plugin.main"]
+
+[[tool.mypy.overrides]]
+module = "server.contracts.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "server.apps.*.migrations.*"
+# Django migrations should not produce any errors (they are tested anyway):
+ignore_errors = true
+
+[tool.mutmut]
+source_paths = ["server/"]
+do_not_mutate = [
+  "server/contracts/*",
+  "server/settings/*",
+  "server/*/migrations/*",
+  "server/asgi.py",
+  "server/wsgi.py",
+]
+also_copy = ["tests/", "config/", "manage.py", "setup.cfg", "pyproject.toml"]
+mutate_only_covered_lines = true
+pytest_add_cli_args = [
+  "-o", "addopts=",
+  "-p", "no:randomly",
+  "--hypothesis-profile=mutmut",
+  "--ignore=tests/test_apps/test_schema.py",
+]
+
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.src]
+exclude = [
+  "server/contracts",
+  "server/apps/*/migrations",
+  "mutants",
+]
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[[tool.ty.overrides]]
+include = ["server/settings/environments/development.py"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"
+
+
+[tool.django-stubs]
+# Docs: https://github.com/typeddjango/django-stubs
+django_settings_module = "server.settings"
+strict_settings = false
+
+
+# Deptry: https://deptry.com/usage/
+[tool.deptry]
+# Local application package; imports like `from server...` are first-party.
+known_first_party = ["server"]
+
+[tool.deptry.per_rule_ignores]
+# Used via Django settings / deploy
+DEP002 = [
+  "django-axes",               # INSTALLED_APPS, middleware, auth backend
+  "django-cors-headers",       # INSTALLED_APPS + middleware via dotted path
+  "django-permissions-policy", # Permissions-Policy middleware (dotted path)
+  "psycopg2-binary",           # PostgreSQL driver for `ENGINE = postgresql`
+  "gunicorn",                  # production WSGI/ASGI process (docker/, CI)
+  "uvicorn",                   # ASGI worker backend
+  "uvicorn-worker",            # Gunicorn worker class for uvicorn
+]
+# Imported directly but pulled in only as transitive deps
+DEP003 = [
+  "attrs",      # imported directly, provided transitively via django-modern-rest extra
+  "msgspec",    # DTOs (also via django-modern-rest extra)
+  "pydantic",   # payloads/schemas (also via django-modern-rest extra)
+]
+# Dev dependencies referenced from application code
+DEP004 = [
+  "debug_toolbar",     # DEBUG urls/settings
+]
+
+[tool.codespell]
+# codespell configuration: https://pypi.org/project/codespell
+skip = '''__pycache__,
+server/contracts,
+mutants,
+tracecov-report.*,
+*/_build,
+.*_cache,
+.*_history,
+*.lock,
+.ipython,
+.hypothesis,
+.safety,
+.coverage,
+htmlcov,
+coverage.xml'''
+
+[tool.typos]
+# typos configuration: https://github.com/crate-ci/typos/
+files.extend-exclude = [
+  "server/contracts",
+  "tracecov-report.*",
+  "mutants",
+  "__pycache__",
+  "*/_build",
+  ".*_cache",
+  ".*_history",
+  "*.lock",
+  ".ipython",
+  ".hypothesis",
+  ".safety",
+  ".coverage",
+  "htmlcov",
+  "coverage.xml",
+]
+default.extend-identifiers = { _SerT = "_SerT" }
+default.extend-ignore-re = [
+  "\\b[0-9a-f]{7,40}\\b", # git commit hashes
+]

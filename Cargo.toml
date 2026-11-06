@@ -1,0 +1,48 @@
+[workspace]
+resolver = "3"
+members = ["services/hello", "tools/eo-lint"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.90"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+anyhow = "1.0.104"
+async-nats = "0.52.0"
+axum = "0.8.9"
+prost = "0.14.4"
+proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
+syn = { version = "2", features = ["full", "visit", "extra-traits"] }
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal", "net"] }
+tonic = "0.14.9"
+tonic-prost = "0.14.9"
+tonic-prost-build = "0.14.9"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+walkdir = "2.5.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+unexpected_cfgs = { level = "deny", check-cfg = ["cfg(eo)"] }
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+mutex_atomic = "deny"
+too_many_lines = "deny"

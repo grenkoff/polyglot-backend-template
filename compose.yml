@@ -1,0 +1,99 @@
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+x-core: &core
+  image: "core:dev"
+  build:
+    context: ./services/core
+    dockerfile: ./docker/django/Dockerfile
+    target: development_build
+    args:
+      DJANGO_ENV: development
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
+  logging: *logging
+  volumes:
+    - ./services/core:/code
+  env_file: ./services/core/config/.env
+  environment:
+    DJANGO_DATABASE_HOST: db
+    HELLO_GRPC_ADDR: hello:50051
+    NATS_URL: nats://nats:4222
+  depends_on:
+    db:
+      condition: service_healthy
+    nats:
+      condition: service_healthy
+    hello:
+      condition: service_healthy
+
+services:
+  db:
+    image: "postgres:18-alpine"
+    restart: unless-stopped
+    logging: *logging
+    env_file: ./services/core/config/.env
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+
+  nats:
+    image: "nats:2-alpine"
+    restart: unless-stopped
+    logging: *logging
+    command: ["--jetstream", "--http_port", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  core-migrate:
+    <<: *core
+    command: python manage.py migrate --no-input
+
+  core:
+    <<: *core
+    command: python -We -bb manage.py runserver 0.0.0.0:8000
+    depends_on:
+      core-migrate:
+        condition: service_completed_successfully
+      hello:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: /bin/sh /code/docker/django/healthcheck.sh
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  core-events:
+    <<: *core
+    command: python manage.py listen_greetings
+
+  hello:
+    build:
+      context: .
+      dockerfile: ./services/hello/Dockerfile
+    image: "hello:dev"
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      NATS_URL: nats://nats:4222
+      RUST_LOG: info
+    depends_on:
+      nats:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
