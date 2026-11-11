@@ -103,16 +103,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: make env
-      - name: Build image
-        working-directory: services/core
-        run: docker compose build web
       - name: Lint, type check, test
-        working-directory: services/core
-        run: docker compose run --user=root --rm web ./docker/django/ci.sh
+        run: make core
       - name: Mutation testing (mutmut)
-        working-directory: services/core
-        run: docker compose run --user=root --rm web ./docker/django/mutants.sh
+        run: make mutants-core
       - name: ty (second type checker, non-blocking)
         if: ${{ !cancelled() }}
         continue-on-error: true

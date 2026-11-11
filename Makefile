@@ -53,7 +53,7 @@ mutants-core: env
 .PHONY: core
 core: env
 	cd $(CORE) && $(COMPOSE) build web && \
-	  $(COMPOSE) run --user=root --rm web ./docker/django/ci.sh
+	  $(COMPOSE) run --rm web ./docker/django/ci.sh
 
 .PHONY: ty
 ty: env
