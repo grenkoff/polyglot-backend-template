@@ -1,3 +1,5 @@
+"""Tests of greeting value objects."""
+
 import msgspec
 
 from server.apps.greetings.logic.value_objects import GreetingRequest

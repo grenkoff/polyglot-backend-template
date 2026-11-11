@@ -1,3 +1,5 @@
+"""Use case that creates a blog post."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, final
@@ -25,10 +27,5 @@ class CreateBlogPost:
         self,
         parsed_body: BlogPostCreatePayload,
     ) -> BlogPostFullPayload:
-        """
-        There's no real story to tell about this example.
-
-        But here you need to put a text description of what business
-        needs to be done in this usecase.
-        """
+        """Creates a blog post and returns it as a value object."""
         return self._mapper(self._repository.create(parsed_body))

@@ -1,3 +1,5 @@
+"""Dependency injection for controllers."""
+
 import importlib
 from typing import Any, final
 
@@ -5,11 +7,7 @@ import punq
 
 
 class HasContainer:
-    """
-    Base class for all parts that use ``resolve()`` function.
-
-    Must be the first base class.
-    """
+    """Mixin that resolves dependencies; must be the first base class."""
 
     __slots__ = ('_container',)
 

@@ -1,3 +1,5 @@
+"""Fixtures for the templates of the main app."""
+
 import pytest
 
 

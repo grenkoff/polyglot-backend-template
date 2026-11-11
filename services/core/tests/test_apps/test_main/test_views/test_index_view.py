@@ -1,3 +1,5 @@
+"""Tests of the index page."""
+
 from http import HTTPStatus
 
 from django.test import Client

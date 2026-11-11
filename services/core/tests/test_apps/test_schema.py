@@ -1,3 +1,5 @@
+"""Property-based tests of the whole HTTP API against its OpenAPI schema."""
+
 import logging
 from collections.abc import Iterator
 from typing import Any
@@ -17,6 +19,7 @@ from server.wsgi import application
 @pytest.fixture(autouse=True)
 def _disable_logging(settings: LazySettings) -> Iterator[None]:
     # django-query-counter produces tons of output for no reason:
+    """Silences logging and query counting while schemathesis runs."""
     settings.DQC_ENABLED = False
     # Logging has too much output with schemathesis:
     logging.disable(logging.CRITICAL)

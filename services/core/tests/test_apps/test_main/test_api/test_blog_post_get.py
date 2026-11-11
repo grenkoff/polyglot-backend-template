@@ -1,3 +1,5 @@
+"""Tests of the blog post reading endpoint."""
+
 from http import HTTPStatus
 
 import msgspec

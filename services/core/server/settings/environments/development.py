@@ -1,8 +1,4 @@
-"""
-This file contains all the settings that defines the development server.
-
-SECURITY WARNING: don't run with debug turned on in production!
-"""
+"""Settings of the development server; never use them in production."""
 
 from __future__ import annotations
 

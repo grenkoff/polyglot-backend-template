@@ -1,3 +1,5 @@
+"""Addresses and timeouts of the services core talks to."""
+
 from server.settings.components import config
 
 HELLO_GRPC_ADDR = config('HELLO_GRPC_ADDR', default='localhost:50051')

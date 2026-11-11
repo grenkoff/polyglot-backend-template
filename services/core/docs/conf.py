@@ -1,3 +1,5 @@
+"""Sphinx settings for the documentation of core."""
+
 # wemake-django-template documentation build configuration file, created by
 # sphinx-quickstart on Sat Sep 30 12:42:34 2017.
 #
@@ -36,6 +38,7 @@ django.setup()
 
 
 def _get_project_meta() -> dict[str, str]:  # lying about return type
+    """Reads the project section of pyproject.toml."""
     pyproject = _ROOT / 'pyproject.toml'
     return cast(
         dict[str, str],

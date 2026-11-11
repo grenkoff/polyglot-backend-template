@@ -1,3 +1,5 @@
+"""HTTP controllers of the greetings API."""
+
 from http import HTTPStatus
 from typing import final, override
 
@@ -22,6 +24,8 @@ class GreetingCreate(
     HasContainer,
     Controller[StrictMsgspecSerializer],
 ):
+    """Creates greetings over HTTP and maps failures to HTTP statuses."""
+
     @modify(
         status_code=HTTPStatus.OK,
         extra_responses=[
@@ -32,6 +36,7 @@ class GreetingCreate(
         ],
     )
     def post(self, parsed_body: Body[GreetingRequest]) -> GreetingText:
+        """Returns a greeting for the name in the request body."""
         return self.resolve(greet.Greet)(parsed_body)
 
     @override
@@ -41,6 +46,7 @@ class GreetingCreate(
         controller: Controller[StrictMsgspecSerializer],
         exc: Exception,
     ) -> HttpResponse:
+        """Answers 503 when the hello service is unavailable."""
         if isinstance(exc, GreetingsUnavailableError):
             return self.to_error(
                 self.format_error(

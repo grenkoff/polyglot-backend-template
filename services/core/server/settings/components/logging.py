@@ -1,3 +1,5 @@
+"""Structured logging settings."""
+
 # Logging
 # https://docs.djangoproject.com/en/6.1/topics/logging/
 
@@ -85,12 +87,7 @@ class LoggingContextVarsMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        """
-        Handle requests.
-
-        Add your logging metadata here.
-        Example: https://github.com/jrobichaud/django-structlog
-        """
+        """Binds request metadata to the log context and handles the request."""
         response = self.get_response(request)
         structlog.contextvars.clear_contextvars()
         return response

@@ -1,3 +1,5 @@
+"""Tests of the service URLs."""
+
 from http import HTTPStatus
 from typing import Final
 

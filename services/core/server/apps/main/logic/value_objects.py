@@ -1,3 +1,5 @@
+"""Value objects of blog posts."""
+
 from typing import Annotated, final
 
 import msgspec

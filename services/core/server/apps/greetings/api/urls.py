@@ -1,3 +1,5 @@
+"""Routes of the greetings HTTP API."""
+
 from dmr.routing import Router, path
 
 from server.apps.greetings.api import views

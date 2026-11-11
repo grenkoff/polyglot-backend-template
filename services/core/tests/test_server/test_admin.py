@@ -1,3 +1,5 @@
+"""Tests of the admin panel."""
+
 from http import HTTPStatus
 
 import pytest

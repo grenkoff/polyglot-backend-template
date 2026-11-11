@@ -1,3 +1,5 @@
+"""Database access for blog posts."""
+
 from __future__ import annotations
 
 from typing import final

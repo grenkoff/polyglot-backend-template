@@ -1,3 +1,5 @@
+"""Tests of the OpenAPI schema endpoints."""
+
 from http import HTTPStatus
 from typing import Final
 

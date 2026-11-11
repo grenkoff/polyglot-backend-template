@@ -1,3 +1,5 @@
+"""Routes of the main HTTP API."""
+
 from dmr.routing import Router, path
 
 from server.apps.main.api import views

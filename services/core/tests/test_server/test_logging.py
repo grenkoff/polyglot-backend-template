@@ -1,3 +1,5 @@
+"""Tests of the logging settings."""
+
 import logging
 import re
 from typing import Final

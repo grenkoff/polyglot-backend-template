@@ -1,12 +1,4 @@
-"""
-Django settings for server project.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.1/topics/settings/
-
-For the full list of settings and their config, see
-https://docs.djangoproject.com/en/6.1/ref/settings/
-"""
+"""Common Django settings of core."""
 
 from django.utils.translation import gettext_lazy as _
 

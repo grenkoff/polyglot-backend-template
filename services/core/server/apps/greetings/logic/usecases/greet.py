@@ -1,3 +1,5 @@
+"""Use case that greets a person."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, final
@@ -15,7 +17,10 @@ if TYPE_CHECKING:
 @final
 @attrs.define(slots=True, frozen=True)
 class Greet:
+    """Greets a person with the configured greetings."""
+
     _greetings: Greetings
 
     def __call__(self, request: GreetingRequest) -> GreetingText:
+        """Returns the greeting for the request."""
         return self._greetings.text(request)

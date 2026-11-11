@@ -1,3 +1,5 @@
+"""Tests of greetings from the hello service over gRPC."""
+
 import pytest
 from django.conf import settings
 
