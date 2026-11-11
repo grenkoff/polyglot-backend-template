@@ -10,16 +10,13 @@ from server.apps.greetings.infra.inbox import SUBJECT, NatsInbox
 
 async def _delivered(payload: bytes) -> bytes:
     """Publishes the payload and returns what the inbox received."""
-    client = await nats.connect(
+    async with await nats.connect(
         settings.NATS_URL,
         connect_timeout=settings.NATS_TIMEOUT,
-    )
-    try:
-        payloads = await NatsInbox(client).payloads()
+    ) as client:
+        payloads = await NatsInbox(client, settings).payloads()
         await client.publish(SUBJECT, payload)
         return await asyncio.wait_for(anext(payloads), settings.NATS_TIMEOUT)
-    finally:
-        await client.close()
 
 
 def test_nats_inbox_delivers_published_events() -> None:
