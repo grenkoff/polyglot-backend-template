@@ -1,3 +1,5 @@
+"""Settings of the HTTP API: OpenAPI and CORS."""
+
 import tomllib
 from typing import Any, cast
 
@@ -8,6 +10,7 @@ from server.settings.components import BASE_DIR, config
 
 
 def _get_project_meta() -> dict[str, str]:  # lying about return type
+    """Reads the project section of pyproject.toml."""
     pyproject = BASE_DIR / 'pyproject.toml'
     return cast(
         dict[str, str],

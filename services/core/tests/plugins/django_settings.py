@@ -1,3 +1,5 @@
+"""Fixtures that adjust Django settings for tests."""
+
 import pytest
 from django.conf import LazySettings
 

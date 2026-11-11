@@ -1,3 +1,5 @@
+"""Tests of the blog post creation endpoint."""
+
 from http import HTTPStatus
 from typing import final
 
@@ -18,6 +20,8 @@ from server.apps.main.models import BlogPost
 
 @final
 class _BlogPostCreateFactory(MsgspecFactory[BlogPostCreatePayload]):
+    """Builds random valid blog post payloads."""
+
     __check_model__ = True
 
 

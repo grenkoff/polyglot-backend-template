@@ -1,3 +1,5 @@
+"""Tests of the blog post model."""
+
 from typing import final
 
 from hypothesis import given

@@ -1,3 +1,5 @@
+"""Base path and environment configuration shared by all settings."""
+
 from pathlib import Path
 
 from decouple import AutoConfig

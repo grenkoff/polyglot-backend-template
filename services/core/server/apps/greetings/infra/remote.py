@@ -1,3 +1,5 @@
+"""Greetings built by the hello service over gRPC."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, final
@@ -21,9 +23,12 @@ if TYPE_CHECKING:
 @final
 @attrs.define(slots=True, frozen=True)
 class RemoteGreetings:
+    """Adapter: asks the hello service for greetings over gRPC."""
+
     _settings: LazySettings
 
     def text(self, request: GreetingRequest) -> GreetingText:
+        """Asks the hello service for a greeting, raising domain errors."""
         with grpc.insecure_channel(self._settings.HELLO_GRPC_ADDR) as channel:
             try:
                 response = hello_pb2_grpc.HelloServiceStub(channel).Greet(

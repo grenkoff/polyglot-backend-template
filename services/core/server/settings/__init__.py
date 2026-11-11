@@ -1,13 +1,4 @@
-"""
-This is a django-split-settings main file.
-
-For more information read this:
-https://github.com/sobolevn/django-split-settings
-https://sobolevn.me/2017/04/managing-djangos-settings
-
-To change settings file:
-`DJANGO_ENV=production python manage.py runserver`
-"""
+"""Settings of core, split by component and environment."""
 
 from os import environ
 

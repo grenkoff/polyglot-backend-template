@@ -1,3 +1,5 @@
+"""Composition root: binds every protocol to its implementation."""
+
 # NOTE: simple layers go on top!
 
 from collections.abc import Callable
@@ -7,6 +9,7 @@ import punq
 
 
 def _global_namespace() -> dict[str, Any]:
+    """Returns the names that annotations of injected objects refer to."""
     from django.conf import LazySettings  # noqa: F401
     from django.core.cache import BaseCache  # noqa: F401
 
@@ -18,6 +21,7 @@ def _create_injector[Thing](
     localns: dict[str, Any],
 ) -> Callable[[Thing], Thing]:
     # We need to provide the same string names as we do in the definition.
+    """Makes the container resolve annotations with the given names."""
     localns.pop('container')
     localns.update(_global_namespace())
     container.registrations._localns.update(localns)  # noqa: SLF001
@@ -25,6 +29,7 @@ def _create_injector[Thing](
 
 
 def _inject_django(container: punq.Container) -> None:
+    """Registers Django objects in the container."""
     from django.conf import LazySettings, settings
 
     # Django:
@@ -36,6 +41,7 @@ def _inject_django(container: punq.Container) -> None:
 
 
 def _inject_main(container: punq.Container) -> None:
+    """Registers the objects of the main app in the container."""
     from server.apps.main.infra import mappers, repository
     from server.apps.main.logic.usecases import blogpost_create, blogpost_get
 
@@ -51,6 +57,7 @@ def _inject_main(container: punq.Container) -> None:
 
 
 def _inject_greetings(container: punq.Container) -> None:
+    """Registers the objects of the greetings app in the container."""
     from server.apps.greetings.infra import remote
     from server.apps.greetings.logic.greetings import Greetings
     from server.apps.greetings.logic.usecases import greet

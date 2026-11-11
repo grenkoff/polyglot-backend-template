@@ -1,3 +1,5 @@
+"""Use case that reads a blog post."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, final
@@ -19,10 +21,5 @@ class GetBlogPost:
     _mapper: mappers.BlogPostMapper
 
     def __call__(self, blog_post_id: int) -> BlogPostFullPayload:
-        """
-        There's no real story to tell about this example.
-
-        But here you need to put a text description of what business
-        needs to be done in this usecase.
-        """
+        """Returns the blog post with the given id as a value object."""
         return self._mapper(self._repository.get_by_id(blog_post_id))

@@ -1,3 +1,5 @@
+"""Tests of the docstring report of a directory."""
+
 from pathlib import Path
 
 from scripts.docstrings import TreeReport

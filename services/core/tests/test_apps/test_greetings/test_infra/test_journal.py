@@ -1,3 +1,5 @@
+"""Tests of the log journal of greeting events."""
+
 import logging
 from collections.abc import Iterator
 
@@ -15,6 +17,7 @@ _PAYLOAD = hello_pb2.Greeted(name='Ann', text='Hello, Ann!').SerializeToString()
 def server_records(
     caplog: pytest.LogCaptureFixture,
 ) -> Iterator[pytest.LogCaptureFixture]:
+    """Captures records of the server logger."""
     server_logger = logging.getLogger('server')
     server_logger.addHandler(caplog.handler)
     yield caplog

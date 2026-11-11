@@ -1,3 +1,5 @@
+"""Tests of the greeting HTTP endpoint."""
+
 from http import HTTPStatus
 
 import msgspec
@@ -10,6 +12,7 @@ from server.apps.greetings.logic.value_objects import GreetingRequest
 
 @pytest.fixture
 def url() -> str:
+    """Returns the URL of the greeting endpoint."""
     return reverse('api:v1:greetings:greeting_create')
 
 

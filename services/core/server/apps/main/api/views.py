@@ -1,3 +1,5 @@
+"""HTTP controllers of the blog post API."""
+
 from http import HTTPStatus
 from typing import final, override
 

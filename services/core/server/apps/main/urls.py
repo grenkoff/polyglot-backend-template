@@ -1,3 +1,5 @@
+"""Routes of the main app pages."""
+
 from dmr.routing import path
 
 from server.apps.main.views import index

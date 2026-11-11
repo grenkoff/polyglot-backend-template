@@ -1,3 +1,5 @@
+"""Admin panel of the main app."""
+
 from django.contrib import admin
 
 from server.apps.main.models import BlogPost

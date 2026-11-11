@@ -1,3 +1,5 @@
+"""Tests of the docstring report of one module."""
+
 from pathlib import Path
 
 from scripts.docstrings import ModuleReport

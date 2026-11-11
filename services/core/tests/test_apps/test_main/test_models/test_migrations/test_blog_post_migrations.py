@@ -1,3 +1,5 @@
+"""Tests of the blog post migrations."""
+
 import pytest
 from django_test_migrations.migrator import Migrator
 

@@ -1,3 +1,5 @@
+"""Fixture with the API coverage map of tracecov."""
+
 import pytest
 from tracecov import CoverageMap
 

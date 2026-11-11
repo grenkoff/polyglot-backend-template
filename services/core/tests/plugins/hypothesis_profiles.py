@@ -1,3 +1,5 @@
+"""Hypothesis profiles used by the test runs."""
+
 from hypothesis import HealthCheck, settings
 
 settings.register_profile(

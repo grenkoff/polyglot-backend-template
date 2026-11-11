@@ -1,3 +1,5 @@
+"""Journal that writes received greeting events to the log."""
+
 from typing import final
 
 import attrs
@@ -10,7 +12,10 @@ from server.contracts.hello.v1 import hello_pb2
 @final
 @attrs.define(slots=True, frozen=True)
 class LogJournal:
+    """Records greeting events in the structured log."""
+
     def record(self, payload: bytes) -> Greeted:
+        """Decodes a greeting event and logs it."""
         message = hello_pb2.Greeted.FromString(payload)
         greeted = Greeted(name=message.name, text=message.text)
         structlog.get_logger(__name__).info(
