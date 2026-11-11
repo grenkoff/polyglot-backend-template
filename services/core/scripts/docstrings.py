@@ -58,7 +58,10 @@ class TreeReport:
 
     def problems(self) -> Iterator[str]:
         """Yields one line per problem."""
-        yield from ()
+        for path in sorted(self._root.rglob('*.py')):
+            relative = path.relative_to(self._root)
+            if not any(map(relative.full_match, self._excluded)):
+                yield from ModuleReport(relative, path.read_text()).problems()
 
 
 def _line(node: ast.AST) -> int:
