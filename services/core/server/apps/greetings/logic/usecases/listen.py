@@ -20,3 +20,5 @@ class Listen:
 
     async def __call__(self) -> None:
         """Records events until the inbox has no more."""
+        async for payload in await self._inbox.payloads():
+            self._journal.record(payload)
