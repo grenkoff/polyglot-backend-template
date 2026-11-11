@@ -48,3 +48,7 @@ def test_reports_module_without_docstring() -> None:
     problems = list(ModuleReport(Path('a.py'), 'VALUE = 1').problems())
 
     assert problems == ['a.py:1: missing docstring']
+
+
+def test_skips_empty_module() -> None:
+    assert not list(ModuleReport(Path('__init__.py'), '').problems())
