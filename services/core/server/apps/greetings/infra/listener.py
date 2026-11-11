@@ -6,7 +6,7 @@ import asyncio
 from typing import TYPE_CHECKING, final
 
 import attrs
-import nats
+from nats.aio.client import Client
 
 from server.apps.greetings.infra.inbox import SUBJECT, NatsInbox
 from server.apps.greetings.logic.usecases.listen import Listen
@@ -46,12 +46,17 @@ class NatsListener:
 
     async def run(self, stopped: asyncio.Event) -> None:
         """Records events until the stop event is set."""
-        client = await nats.connect(
-            self._settings.NATS_URL,
-            connect_timeout=self._settings.NATS_TIMEOUT,
-            allow_reconnect=False,
-            drain_timeout=self._settings.NATS_TIMEOUT,
-        )
+        client = Client()
+        try:
+            await client.connect(
+                self._settings.NATS_URL,
+                connect_timeout=self._settings.NATS_TIMEOUT,
+                allow_reconnect=False,
+                drain_timeout=self._settings.NATS_TIMEOUT,
+            )
+        except TimeoutError:
+            await client.close()
+            raise
         listening = asyncio.create_task(
             Listen(
                 AnnouncedInbox(
