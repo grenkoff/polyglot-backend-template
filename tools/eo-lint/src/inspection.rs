@@ -65,6 +65,7 @@ pub struct Inspection {
     file: String,
     entry: bool,
     findings: Vec<Finding>,
+    doc: Option<usize>,
 }
 
 impl Inspection {
@@ -74,6 +75,7 @@ impl Inspection {
             file: file.into(),
             entry,
             findings: Vec::new(),
+            doc: None,
         }
     }
 }
@@ -235,6 +237,21 @@ impl Verdict for Method<'_> {
 }
 
 impl<'ast> Visit<'ast> for Inspection {
+    fn visit_attribute(&mut self, node: &'ast syn::Attribute) {
+        if node.path().is_ident("doc") {
+            let line = node.span().start().line;
+            if self.doc.is_some_and(|last| last + 1 == line) {
+                self.findings.push(Finding::new(
+                    &self.file,
+                    line,
+                    "EO012",
+                    "documentation has more than one line, keep it to one",
+                ));
+            }
+            self.doc = Some(line);
+        }
+    }
+
     fn visit_item_mod(&mut self, node: &'ast ItemMod) {
         if !Marks::new(&node.attrs).testing() {
             visit::visit_item_mod(self, node);
