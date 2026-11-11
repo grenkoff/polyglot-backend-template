@@ -46,6 +46,7 @@ run_ci () {
   # Running linting for all python files in the project:
   ruff check --exit-non-zero-on-fix
   ruff format --check --diff
+  python -m scripts.docstrings
   flake8 .
 
   # Lint imports:

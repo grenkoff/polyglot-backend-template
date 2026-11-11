@@ -153,10 +153,7 @@ select = [
 ]
 ignore = [
   "A005",   # allow to shadow stdlib and builtin module names
-  # Different doc rules that we don't really care about:
-  "D100",
   "D104",
-  "D106",
   "D203",
   "D212",
   "D401",
@@ -181,10 +178,10 @@ mccabe.max-complexity = 6
 pydocstyle.convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"server/apps/*/migrations/*.py" = ["D101", "E501", "RUF012"]
+"server/apps/*/migrations/*.py" = ["D100", "D101", "E501", "RUF012"]
 "server/common/typing/*.py" = ["F401"]
 "server/implemented.py" = ["PLC0415", "D103"]
-"tests/*.py" = ["S101"]
+"tests/*.py" = ["D103", "S101"]
 
 
 [tool.pytest.ini_options]
