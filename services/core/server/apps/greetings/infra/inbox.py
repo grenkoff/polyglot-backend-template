@@ -18,8 +18,6 @@ class NatsInbox:
 
     async def payloads(self) -> AsyncIterator[bytes]:
         """Subscribes to the greeting subject and returns the payloads."""
-        return self._nothing()
-
-    async def _nothing(self) -> AsyncIterator[bytes]:
-        """Yields a placeholder instead of real events."""
-        yield b''
+        subscription = await self._client.subscribe(SUBJECT)
+        await self._client.flush()
+        return (message.data async for message in subscription.messages)
