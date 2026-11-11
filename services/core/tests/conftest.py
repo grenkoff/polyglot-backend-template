@@ -8,4 +8,5 @@ pytest_plugins = [
     # TODO: add your own plugins here!
     'plugins.main.main_templates',
     'plugins.greetings.hello_server',
+    'plugins.greetings.nats_events',
 ]
