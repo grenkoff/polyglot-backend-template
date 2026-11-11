@@ -231,6 +231,7 @@ addopts = [
   "--tb=short",
   # Coverage:
   "--cov=server",
+  "--cov=scripts",
   "--cov=tests",
   "--cov-branch",
   "--cov-report=term-missing:skip-covered",
@@ -308,7 +309,7 @@ module = "server.apps.*.migrations.*"
 ignore_errors = true
 
 [tool.mutmut]
-source_paths = ["server/"]
+source_paths = ["server/", "scripts/"]
 do_not_mutate = [
   "server/contracts/*",
   "server/settings/*",
