@@ -52,3 +52,13 @@ def test_reports_module_without_docstring() -> None:
 
 def test_skips_empty_module() -> None:
     assert not list(ModuleReport(Path('__init__.py'), '').problems())
+
+
+def test_skips_test_functions() -> None:
+    source = '\n'.join((
+        '"""Tests of something."""',
+        'def test_something():',
+        '    assert True',
+    ))
+
+    assert not list(ModuleReport(Path('test_a.py'), source).problems())
