@@ -33,7 +33,7 @@ class ModuleReport:
     def problems(self) -> Iterator[str]:
         """Yields one line per problem."""
         for node in ast.walk(ast.parse(self._text)):
-            if isinstance(node, _DOCUMENTED):
+            if isinstance(node, _DOCUMENTED) and node.body:
                 docstring = ast.get_docstring(node, clean=False)
                 if not docstring:
                     yield f'{self._path}:{_line(node)}: missing docstring'
