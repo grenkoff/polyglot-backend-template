@@ -753,6 +753,12 @@ Both are written in English, for a human who must understand the point in
 a minute. Up to about 15 lines; when it does not fit, cut, do not shrink
 the font. Headings `###` or smaller only, never `#` or `##`.
 
+- Write each paragraph and each list item on one line: GitHub shows every
+  line break of an Issue or pull request body as a break, so wrapped text
+  renders as a narrow column.
+- Assign the human to every Issue and pull request the agent creates
+  (`--assignee @me`).
+
 **Issue** (drafted by the agent, created after the human approves):
 
 - title: a plain sentence about the outcome
