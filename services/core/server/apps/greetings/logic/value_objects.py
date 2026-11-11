@@ -9,7 +9,11 @@ from server.apps.greetings.logic.constants import NAME_MAX_LENGTH
 class GreetingRequest(msgspec.Struct, frozen=True):
     name: Annotated[
         str,
-        msgspec.Meta(min_length=1, max_length=NAME_MAX_LENGTH),
+        msgspec.Meta(
+            min_length=1,
+            max_length=NAME_MAX_LENGTH,
+            pattern=r'\S',
+        ),
     ]
     polite: bool = False
 
