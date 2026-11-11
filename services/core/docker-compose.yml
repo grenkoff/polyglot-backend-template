@@ -35,6 +35,19 @@ services:
       retries: 5
       start_period: 5s
 
+  nats:
+    image: "nats:2-alpine"
+    restart: unless-stopped
+    logging: *logging-default
+    command: ["--http_port", "8222"]
+    networks:
+      - nats-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   web:
     <<: &web
       # CI builds the development image under a local tag first, then retags
@@ -57,12 +70,16 @@ services:
       depends_on:
         db:
           condition: service_healthy
+        nats:
+          condition: service_healthy
       networks:
         - web-net
         - postgres-net
+        - nats-net
       env_file: ./config/.env
       environment:
         DJANGO_DATABASE_HOST: db
+        NATS_URL: nats://nats:4222
 
     command: python -We -bb manage.py runserver 0.0.0.0:8000
     healthcheck:
@@ -82,6 +99,7 @@ networks:
   postgres-net:
   # Network for your internals, use it by default:
   web-net:
+  nats-net:
 
 volumes:
   postgres-data:
