@@ -49,6 +49,7 @@ class NatsListener:
         client = await nats.connect(
             self._settings.NATS_URL,
             connect_timeout=self._settings.NATS_TIMEOUT,
+            allow_reconnect=False,
             drain_timeout=self._settings.NATS_TIMEOUT,
         )
         listening = asyncio.create_task(

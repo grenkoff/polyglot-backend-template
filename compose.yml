@@ -80,6 +80,7 @@ services:
   core-events:
     <<: *core
     command: python manage.py listen_greetings
+    restart: unless-stopped
 
   hello:
     build:
