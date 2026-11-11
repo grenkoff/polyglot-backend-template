@@ -577,6 +577,11 @@ mod tests {
     }
 
     #[test]
+    fn reports_multiline_item_docs() {
+        assert_eq!(rules("/// One.\n/// Two.\nstruct Cat;"), ["EO012"]);
+    }
+
+    #[test]
     fn checks_methods_of_trait_objects() {
         let code = "trait Shape {} impl dyn Shape { pub fn area(&self) {} }";
         assert_eq!(rules(code), ["EO004"]);
