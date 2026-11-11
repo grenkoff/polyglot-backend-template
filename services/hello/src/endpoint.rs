@@ -1,10 +1,10 @@
+use contracts::hello::v1::hello_service_server::HelloService;
+use contracts::hello::v1::{GreetRequest, GreetResponse, Greeted};
 use tonic::{Request, Response, Status};
 
 use crate::events::Events;
 use crate::greeting::{Greeting, Plain, Polite};
 use crate::name::{BlankName, Name, Raw, Trimmed};
-use crate::proto::hello_service_server::HelloService;
-use crate::proto::{GreetRequest, GreetResponse, Greeted};
 
 #[derive(Debug)]
 pub struct Greetings<E> {
@@ -52,8 +52,8 @@ mod tests {
 
     use super::Greetings;
     use crate::events::{Events, Journal, Memory, Undelivered};
-    use crate::proto::hello_service_server::HelloService;
-    use crate::proto::{GreetRequest, Greeted};
+    use contracts::hello::v1::hello_service_server::HelloService;
+    use contracts::hello::v1::{GreetRequest, Greeted};
 
     #[tokio::test]
     async fn greets_and_reports() {

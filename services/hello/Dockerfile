@@ -10,6 +10,7 @@ RUN apt-get update \
 WORKDIR /src
 COPY Cargo.toml Cargo.lock ./
 COPY proto ./proto
+COPY contracts ./contracts
 COPY tools ./tools
 COPY services/hello ./services/hello
 

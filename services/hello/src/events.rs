@@ -1,8 +1,7 @@
 use std::future::Future;
 
+use contracts::hello::v1::Greeted;
 use prost::Message;
-
-use crate::proto::Greeted;
 
 #[derive(Debug, thiserror::Error)]
 #[error("event was not published: {0}")]
