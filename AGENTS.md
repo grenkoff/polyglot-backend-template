@@ -1050,3 +1050,8 @@ Also ask when:
 How to ask: one question at a time, with the options, the reasoning for
 each and a recommendation. Then wait. Silence is not approval, and an
 approval covers only the action it was given for.
+
+When the agent writes or changes a rule (this file, `docs/`, linter or CI
+configuration), it shows the human in the chat the exact text it wrote,
+in English as committed, together with a translation into the language
+of the chat.
