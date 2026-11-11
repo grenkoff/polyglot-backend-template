@@ -1,3 +1,5 @@
+//! Integration tests of the hello service with a real NATS server.
+
 use std::time::Duration;
 
 use contracts::hello::v1::Greeted;
