@@ -48,6 +48,19 @@ class ModuleReport:
                     )
 
 
+@final
+@attrs.define(slots=True, frozen=True)
+class TreeReport:
+    """Docstring problems of every Python module under a directory."""
+
+    _root: Path
+    _excluded: tuple[str, ...]
+
+    def problems(self) -> Iterator[str]:
+        """Yields one line per problem."""
+        yield from ()
+
+
 def _line(node: ast.AST) -> int:
     """Returns the line where a module, class or function starts."""
     return getattr(node, 'lineno', 1)
