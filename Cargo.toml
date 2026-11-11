@@ -27,6 +27,7 @@ walkdir = "2.5.0"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 unused_must_use = "deny"
+missing_docs = "deny"
 unexpected_cfgs = { level = "deny", check-cfg = ["cfg(eo)"] }
 
 [workspace.lints.clippy]
@@ -46,3 +47,4 @@ print_stdout = "deny"
 print_stderr = "deny"
 mutex_atomic = "deny"
 too_many_lines = "deny"
+missing_docs_in_private_items = "deny"
