@@ -1,3 +1,5 @@
+//! gRPC endpoint of the hello service.
+
 use contracts::hello::v1::hello_service_server::HelloService;
 use contracts::hello::v1::{GreetRequest, GreetResponse, Greeted};
 use tonic::{Request, Response, Status};
@@ -6,12 +8,15 @@ use crate::events::Events;
 use crate::greeting::{Greeting, Plain, Polite};
 use crate::name::{BlankName, Name, Raw, Trimmed};
 
+/// Greets over gRPC and publishes a fact about every greeting.
 #[derive(Debug)]
 pub struct Greetings<E> {
+    /// Where greeting events are published.
     events: E,
 }
 
 impl<E: Events> Greetings<E> {
+    /// Creates the endpoint that publishes to the given events.
     #[must_use]
     pub const fn new(events: E) -> Self {
         Self { events }

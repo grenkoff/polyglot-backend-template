@@ -1,30 +1,40 @@
+//! Events that report greetings to other services.
+
 use std::future::Future;
 
 use contracts::hello::v1::Greeted;
 use prost::Message;
 
+/// Event that could not be published.
 #[derive(Debug, thiserror::Error)]
 #[error("event was not published: {0}")]
 pub struct Undelivered(String);
 
 impl Undelivered {
+    /// Describes why the event was not published.
     #[must_use]
     pub fn new(reason: impl std::fmt::Display) -> Self {
         Self(reason.to_string())
     }
 }
 
+/// Destination of greeting events.
 pub trait Events: Send + Sync + 'static {
+    /// Publishes one greeting event.
     fn publish(&self, event: Greeted) -> impl Future<Output = Result<(), Undelivered>> + Send;
 }
 
+/// Adapter: publishes greeting events to a NATS subject.
 #[derive(Debug, Clone)]
 pub struct Nats {
+    /// Connection to NATS.
     client: async_nats::Client,
+    /// Subject the events go to.
     subject: String,
 }
 
 impl Nats {
+    /// Creates a publisher to the given subject.
     #[must_use]
     pub fn new(client: async_nats::Client, subject: impl Into<String>) -> Self {
         Self {
@@ -43,12 +53,16 @@ impl Events for Nats {
     }
 }
 
+/// Greeting events kept in memory, for tests.
 #[derive(Debug, Default)]
 pub struct Memory {
+    /// Events published so far.
     published: std::sync::Mutex<Vec<Greeted>>,
 }
 
+/// Events that were already published.
 pub trait Journal {
+    /// Returns the published events in order.
     fn entries(&self) -> Vec<Greeted>;
 }
 

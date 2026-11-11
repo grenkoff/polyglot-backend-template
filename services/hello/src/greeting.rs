@@ -1,15 +1,22 @@
+//! Greetings built from names.
+
 use crate::name::{BlankName, Name};
 
+/// Text that greets someone.
 pub trait Greeting {
+    /// Returns the greeting, or an error when the name is blank.
     fn text(&self) -> Result<String, BlankName>;
 }
 
+/// Greeting that says hello to a name.
 #[derive(Debug, Clone)]
 pub struct Plain<N> {
+    /// Name of the person to greet.
     name: N,
 }
 
 impl<N: Name> Plain<N> {
+    /// Greets the given name.
     #[must_use]
     pub const fn new(name: N) -> Self {
         Self { name }
@@ -22,12 +29,15 @@ impl<N: Name> Greeting for Plain<N> {
     }
 }
 
+/// Decorator: adds a polite ending to another greeting.
 #[derive(Debug, Clone)]
 pub struct Polite<G> {
+    /// Greeting to extend.
     origin: G,
 }
 
 impl<G: Greeting> Polite<G> {
+    /// Makes the given greeting polite.
     #[must_use]
     pub const fn new(origin: G) -> Self {
         Self { origin }

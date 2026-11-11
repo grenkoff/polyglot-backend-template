@@ -1,17 +1,25 @@
+//! Names of the people to greet.
+
+/// Name that has no visible characters.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 #[error("name must not be blank")]
 pub struct BlankName;
 
+/// Name of a person.
 pub trait Name {
+    /// Returns the name, or an error when it is blank.
     fn text(&self) -> Result<String, BlankName>;
 }
 
+/// Name exactly as it was received.
 #[derive(Debug, Clone)]
 pub struct Raw {
+    /// Received text.
     origin: String,
 }
 
 impl Raw {
+    /// Wraps the received text.
     #[must_use]
     pub fn new(origin: impl Into<String>) -> Self {
         Self {
@@ -26,12 +34,15 @@ impl Name for Raw {
     }
 }
 
+/// Decorator: trims another name and refuses a blank one.
 #[derive(Debug, Clone)]
 pub struct Trimmed<N> {
+    /// Name to trim.
     origin: N,
 }
 
 impl<N: Name> Trimmed<N> {
+    /// Trims the given name.
     #[must_use]
     pub const fn new(origin: N) -> Self {
         Self { origin }

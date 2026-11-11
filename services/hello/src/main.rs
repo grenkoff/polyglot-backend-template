@@ -1,9 +1,12 @@
+//! Entry point of the hello service.
+
 use contracts::hello::v1::hello_service_server::HelloServiceServer;
 use hello::endpoint::Greetings;
 use hello::events::Nats;
 use hello::health::{Health, Routes};
 use hello::setting::{Env, Setting};
 
+/// Composition root: wires the hello service and serves gRPC and health checks.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()

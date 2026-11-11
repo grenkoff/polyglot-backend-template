@@ -1,10 +1,15 @@
+//! Health check over HTTP.
+
 use axum::Router;
 use axum::routing::get;
 
+/// HTTP routes of a service.
 pub trait Routes {
+    /// Returns the routes as an axum router.
     fn router(&self) -> Router;
 }
 
+/// Health check that answers `ok` on `/health`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Health;
 
