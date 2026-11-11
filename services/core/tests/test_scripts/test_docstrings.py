@@ -27,3 +27,18 @@ def test_reports_missing_private_docstring() -> None:
     problems = list(ModuleReport(Path('a.py'), source).problems())
 
     assert problems == ['a.py:2: missing docstring']
+
+
+def test_reports_multiline_docstring() -> None:
+    source = '\n'.join((
+        '"""Module."""',
+        'def run():',
+        '    """Runs.',
+        '',
+        '    And explains why.',
+        '    """',
+    ))
+
+    problems = list(ModuleReport(Path('a.py'), source).problems())
+
+    assert problems == ['a.py:2: docstring has more than one line']
