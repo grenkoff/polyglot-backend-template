@@ -65,7 +65,7 @@ pub struct Inspection {
     file: String,
     entry: bool,
     findings: Vec<Finding>,
-    doc: Option<usize>,
+    doc: Option<(usize, bool, bool)>,
 }
 
 impl Inspection {
@@ -240,7 +240,12 @@ impl<'ast> Visit<'ast> for Inspection {
     fn visit_attribute(&mut self, node: &'ast syn::Attribute) {
         if node.path().is_ident("doc") {
             let line = node.span().start().line;
-            if self.doc.is_some_and(|last| last + 1 == line) {
+            let inner = matches!(node.style, syn::AttrStyle::Inner(_));
+            let continued = self
+                .doc
+                .is_some_and(|(last, style, _)| last + 1 == line && style == inner);
+            let reported = self.doc.is_some_and(|(_, _, reported)| reported);
+            if continued && !reported {
                 self.findings.push(Finding::new(
                     &self.file,
                     line,
@@ -248,7 +253,7 @@ impl<'ast> Visit<'ast> for Inspection {
                     "documentation has more than one line, keep it to one",
                 ));
             }
-            self.doc = Some(line);
+            self.doc = Some((line, inner, continued));
         }
     }
 
