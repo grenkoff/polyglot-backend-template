@@ -1,3 +1,5 @@
+//! Rust sources to inspect: text, a file or a directory tree.
+
 use std::path::{Path, PathBuf};
 
 use syn::visit::Visit;
@@ -6,6 +8,7 @@ use walkdir::WalkDir;
 use crate::finding::Finding;
 use crate::inspection::Inspection;
 
+/// Directories that hold no hand-written code to inspect.
 const SKIPPED: &[&str] = &[
     "target",
     ".git",
@@ -15,27 +18,37 @@ const SKIPPED: &[&str] = &[
     "benches",
 ];
 
+/// Why sources could not be inspected.
 #[derive(Debug, thiserror::Error)]
 pub enum Failure {
+    /// A file could not be read.
     #[error("cannot read {0}: {1}")]
     Read(String, std::io::Error),
+    /// A file is not valid Rust.
     #[error("cannot parse {0}: {1}")]
     Parse(String, syn::Error),
+    /// A directory could not be walked.
     #[error("cannot walk directories: {0}")]
     Walk(#[from] walkdir::Error),
 }
 
+/// Rust code that can be inspected.
 pub trait Source {
+    /// Returns the violations found in the code.
     fn findings(&self) -> Result<Vec<Finding>, Failure>;
 }
 
+/// Rust code given as text.
 #[derive(Debug, Clone)]
 pub struct Code {
+    /// Path shown in findings.
     file: String,
+    /// The code itself.
     text: String,
 }
 
 impl Code {
+    /// Wraps code with the path it came from.
     #[must_use]
     pub fn new(file: impl Into<String>, text: impl Into<String>) -> Self {
         Self {
@@ -56,12 +69,15 @@ impl Source for Code {
     }
 }
 
+/// Rust file on disk.
 #[derive(Debug, Clone)]
 pub struct Disk {
+    /// Path to the file.
     path: PathBuf,
 }
 
 impl Disk {
+    /// Points at a file.
     #[must_use]
     pub fn new(path: impl AsRef<Path>) -> Self {
         Self {
@@ -79,12 +95,15 @@ impl Source for Disk {
     }
 }
 
+/// Directory tree of Rust files.
 #[derive(Debug, Clone)]
 pub struct Tree {
+    /// Root directory to walk.
     root: PathBuf,
 }
 
 impl Tree {
+    /// Points at a root directory.
     #[must_use]
     pub fn new(root: impl AsRef<Path>) -> Self {
         Self {
