@@ -65,7 +65,7 @@ pub struct Inspection {
     file: String,
     entry: bool,
     findings: Vec<Finding>,
-    doc: Option<(usize, bool, bool)>,
+    doc: DocLine,
 }
 
 impl Inspection {
@@ -75,7 +75,7 @@ impl Inspection {
             file: file.into(),
             entry,
             findings: Vec::new(),
-            doc: None,
+            doc: DocLine::new(0, false, 0),
         }
     }
 }
@@ -236,16 +236,44 @@ impl Verdict for Method<'_> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct DocLine {
+    line: usize,
+    inner: bool,
+    run: usize,
+}
+
+impl DocLine {
+    #[must_use]
+    pub const fn new(line: usize, inner: bool, run: usize) -> Self {
+        Self { line, inner, run }
+    }
+}
+
+pub trait Sequence {
+    fn next(&self, line: usize, inner: bool) -> DocLine;
+    fn excess(&self) -> bool;
+}
+
+impl Sequence for DocLine {
+    fn next(&self, line: usize, inner: bool) -> DocLine {
+        let continued = self.line + 1 == line && self.inner == inner;
+        Self::new(line, inner, if continued { self.run + 1 } else { 1 })
+    }
+
+    fn excess(&self) -> bool {
+        self.run == 2
+    }
+}
+
 impl<'ast> Visit<'ast> for Inspection {
     fn visit_attribute(&mut self, node: &'ast syn::Attribute) {
         if node.path().is_ident("doc") {
             let line = node.span().start().line;
-            let inner = matches!(node.style, syn::AttrStyle::Inner(_));
-            let continued = self
+            let doc = self
                 .doc
-                .is_some_and(|(last, style, _)| last + 1 == line && style == inner);
-            let reported = self.doc.is_some_and(|(_, _, reported)| reported);
-            if continued && !reported {
+                .next(line, matches!(node.style, syn::AttrStyle::Inner(_)));
+            if doc.excess() {
                 self.findings.push(Finding::new(
                     &self.file,
                     line,
@@ -253,7 +281,7 @@ impl<'ast> Visit<'ast> for Inspection {
                     "documentation has more than one line, keep it to one",
                 ));
             }
-            self.doc = Some((line, inner, continued));
+            self.doc = doc;
         }
     }
 
