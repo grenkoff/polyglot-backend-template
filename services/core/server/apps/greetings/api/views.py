@@ -55,7 +55,7 @@ class GreetingCreate(
                 ),
                 status_code=HTTPStatus.SERVICE_UNAVAILABLE,
             )
-        return super().handle_error(  # pragma: no cover
+        return super().handle_error(
             endpoint,
             controller,
             exc,
