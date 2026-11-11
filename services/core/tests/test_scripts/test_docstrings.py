@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from scripts.docstrings import ModuleReport
+from scripts.docstrings import ModuleReport, TreeReport
 
 
 def test_accepts_one_line_docstrings() -> None:
@@ -62,3 +62,14 @@ def test_skips_test_functions() -> None:
     ))
 
     assert not list(ModuleReport(Path('test_a.py'), source).problems())
+
+
+def test_skips_excluded_paths(tmp_path: Path) -> None:
+    generated = tmp_path / 'contracts'
+    generated.mkdir()
+    (generated / 'generated.py').write_text('VALUE = 1')
+    (tmp_path / 'written.py').write_text('VALUE = 1')
+
+    problems = list(TreeReport(tmp_path, ('contracts/**',)).problems())
+
+    assert problems == ['written.py:1: missing docstring']
