@@ -7,10 +7,7 @@ from dmr.endpoint import Endpoint
 from dmr.errors import ErrorType
 from dmr.metadata import ResponseSpec
 
-from server.apps.greetings.logic.greetings import (
-    BlankNameError,
-    GreetingsUnavailableError,
-)
+from server.apps.greetings.logic.greetings import GreetingsUnavailableError
 from server.apps.greetings.logic.usecases import greet
 from server.apps.greetings.logic.value_objects import (
     GreetingRequest,
@@ -30,10 +27,6 @@ class GreetingCreate(
         extra_responses=[
             ResponseSpec(
                 Controller.error_model,
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            ),
-            ResponseSpec(
-                Controller.error_model,
                 status_code=HTTPStatus.SERVICE_UNAVAILABLE,
             ),
         ],
@@ -48,14 +41,6 @@ class GreetingCreate(
         controller: Controller[StrictMsgspecSerializer],
         exc: Exception,
     ) -> HttpResponse:
-        if isinstance(exc, BlankNameError):
-            return self.to_error(
-                self.format_error(
-                    'Name must not be blank',
-                    error_type=ErrorType.value_error,
-                ),
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
         if isinstance(exc, GreetingsUnavailableError):
             return self.to_error(
                 self.format_error(
