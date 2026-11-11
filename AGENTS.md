@@ -492,7 +492,7 @@ has no failing test behind it; if it blocks, write the test.
 | Level | Python (`core`) | Rust | Runs in |
 |-------|-----------------|------|---------|
 | Unit | `services/core/tests/`, mirrors `server/` | `#[cfg(test)] mod tests` next to the code | `make core`, `make rust` |
-| Integration | real fakes: an in-process gRPC server, PostgreSQL from pytest-django | `tests/` of the crate; NATS and PostgreSQL in Docker (testcontainers) | same |
+| Integration | real fakes: an in-process gRPC server; PostgreSQL and NATS from the Compose file of `core` | `tests/` of the crate; NATS and PostgreSQL in Docker (testcontainers) | same |
 | API contract | schemathesis + tracecov against the OpenAPI schema | — | `make core` |
 | End-to-end | `scripts/e2e.sh` through every service | same | `make e2e` |
 | Mutation | mutmut | cargo-mutants | `make mutants` |
