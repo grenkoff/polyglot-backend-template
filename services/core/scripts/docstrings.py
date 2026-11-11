@@ -1,17 +1,24 @@
 """Checks that every Python object starts with a one-line docstring."""
 
 import ast
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol, final
 
 import attrs
 
-_DOCUMENTED = (
-    ast.Module,
-    ast.ClassDef,
-    ast.FunctionDef,
-    ast.AsyncFunctionDef,
+type _Documented = (
+    ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef
+)
+
+_DEFINITIONS = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+_TEST_PREFIX = 'test_'
+_EXCLUDED = (
+    '.venv/**',
+    'mutants/**',
+    'server/contracts/**',
+    'server/apps/*/migrations/*',
 )
 
 
@@ -24,6 +31,23 @@ class Report(Protocol):
 
 @final
 @attrs.define(slots=True, frozen=True)
+class DocstringReport:
+    """Docstring problems of one module, class or function."""
+
+    _place: str
+    _node: _Documented
+
+    def problems(self) -> Iterator[str]:
+        """Yields one line per problem."""
+        docstring = ast.get_docstring(self._node)
+        if not docstring:
+            yield f'{self._place}: missing docstring'
+        elif '\n' in docstring:
+            yield f'{self._place}: docstring has more than one line'
+
+
+@final
+@attrs.define(slots=True, frozen=True)
 class ModuleReport:
     """Docstring problems of one Python module."""
 
@@ -32,20 +56,17 @@ class ModuleReport:
 
     def problems(self) -> Iterator[str]:
         """Yields one line per problem."""
-        for node in ast.walk(ast.parse(self._text)):
-            if (
-                isinstance(node, _DOCUMENTED)
-                and node.body
-                and not getattr(node, 'name', '').startswith('test_')
+        module = ast.parse(self._text)
+        if module.body:
+            yield from DocstringReport(f'{self._path}:1', module).problems()
+        for node in ast.walk(module):
+            if isinstance(node, _DEFINITIONS) and not node.name.startswith(
+                _TEST_PREFIX,
             ):
-                docstring = ast.get_docstring(node, clean=False)
-                if not docstring:
-                    yield f'{self._path}:{_line(node)}: missing docstring'
-                elif '\n' in docstring:
-                    yield (
-                        f'{self._path}:{_line(node)}: '
-                        'docstring has more than one line'
-                    )
+                yield from DocstringReport(
+                    f'{self._path}:{node.lineno}',
+                    node,
+                ).problems()
 
 
 @final
@@ -64,6 +85,6 @@ class TreeReport:
                 yield from ModuleReport(relative, path.read_text()).problems()
 
 
-def _line(node: ast.AST) -> int:
-    """Returns the line where a module, class or function starts."""
-    return getattr(node, 'lineno', 1)
+if __name__ == '__main__':
+    problems = '\n'.join(TreeReport(Path(), _EXCLUDED).problems())
+    sys.exit(problems or None)
