@@ -37,14 +37,19 @@ def test_greeting_create(
     assert response.json() == {'text': expected}
 
 
-@pytest.mark.usefixtures('hello_server')
-def test_greeting_blank_name(dmr_client: DMRClient, url: str) -> None:
+@pytest.mark.usefixtures('hello_down')
+@pytest.mark.parametrize('blank', ['   ', '\t\n', '　'])
+def test_greeting_blank_name(
+    dmr_client: DMRClient,
+    url: str,
+    blank: str,
+) -> None:
     response = dmr_client.post(
         url,
-        data=msgspec.to_builtins(GreetingRequest(name='   ')),
+        data=msgspec.to_builtins(GreetingRequest(name=blank)),
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 @pytest.mark.usefixtures('hello_server')
