@@ -7,7 +7,12 @@ from typing import Protocol, final
 
 import attrs
 
-_DOCUMENTED = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+_DOCUMENTED = (
+    ast.Module,
+    ast.ClassDef,
+    ast.FunctionDef,
+    ast.AsyncFunctionDef,
+)
 
 
 class Report(Protocol):
@@ -31,9 +36,14 @@ class ModuleReport:
             if isinstance(node, _DOCUMENTED):
                 docstring = ast.get_docstring(node, clean=False)
                 if not docstring:
-                    yield f'{self._path}:{node.lineno}: missing docstring'
+                    yield f'{self._path}:{_line(node)}: missing docstring'
                 elif '\n' in docstring:
                     yield (
-                        f'{self._path}:{node.lineno}: '
+                        f'{self._path}:{_line(node)}: '
                         'docstring has more than one line'
                     )
+
+
+def _line(node: ast.AST) -> int:
+    """Returns the line where a module, class or function starts."""
+    return getattr(node, 'lineno', 1)
