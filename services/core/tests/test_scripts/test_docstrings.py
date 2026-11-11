@@ -42,3 +42,9 @@ def test_reports_multiline_docstring() -> None:
     problems = list(ModuleReport(Path('a.py'), source).problems())
 
     assert problems == ['a.py:2: docstring has more than one line']
+
+
+def test_reports_module_without_docstring() -> None:
+    problems = list(ModuleReport(Path('a.py'), 'VALUE = 1').problems())
+
+    assert problems == ['a.py:1: missing docstring']
