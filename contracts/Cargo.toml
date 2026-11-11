@@ -1,0 +1,16 @@
+[package]
+name = "contracts"
+version = "0.1.0"
+description = "Rust code generated from the gRPC contracts in proto/"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+prost.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+
+[build-dependencies]
+tonic-prost-build.workspace = true

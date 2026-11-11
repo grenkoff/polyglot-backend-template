@@ -1,8 +1,8 @@
 use std::time::Duration;
 
+use contracts::hello::v1::Greeted;
 use futures::StreamExt;
 use hello::events::{Events, Nats};
-use hello::proto::Greeted;
 use prost::Message;
 use testcontainers_modules::nats::Nats as NatsImage;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;

@@ -1,7 +1,7 @@
+use contracts::hello::v1::hello_service_server::HelloServiceServer;
 use hello::endpoint::Greetings;
 use hello::events::Nats;
 use hello::health::{Health, Routes};
-use hello::proto::hello_service_server::HelloServiceServer;
 use hello::setting::{Env, Setting};
 
 #[tokio::main]
