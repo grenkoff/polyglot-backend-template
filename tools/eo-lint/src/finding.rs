@@ -1,14 +1,22 @@
+//! Violations found by eo-lint.
+
 use std::fmt;
 
+/// Rule violation at a line of a file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Finding {
+    /// Path of the file.
     file: String,
+    /// Line of the violation.
     line: usize,
+    /// Rule code such as `EO001`.
     rule: &'static str,
+    /// What is wrong and how to fix it.
     message: String,
 }
 
 impl Finding {
+    /// Creates a finding.
     #[must_use]
     pub fn new(
         file: impl Into<String>,

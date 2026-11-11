@@ -1,3 +1,5 @@
+//! Elegant Objects rules checked on the syntax tree of one file.
+
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
 use syn::{
@@ -6,7 +8,9 @@ use syn::{
     TraitItem, Type, Visibility,
 };
 
+/// Tells whether a receiver lets a method change its object.
 pub trait Mutation {
+    /// Returns true for `&mut self` and `mut self`.
     fn mutates(&self) -> bool;
 }
 
@@ -19,6 +23,7 @@ impl Mutation for Receiver {
 use crate::attributes::{Attributes, Marks};
 use crate::finding::Finding;
 
+/// Words ending in -er or -or that name things, not doers.
 const NOUNS: &[&str] = &[
     "Error",
     "Order",
@@ -60,15 +65,21 @@ const NOUNS: &[&str] = &[
     "Major",
 ];
 
+/// Visitor that collects the violations of one file.
 #[derive(Debug)]
 pub struct Inspection {
+    /// Path of the inspected file.
     file: String,
+    /// Whether the file is an entry point such as `main.rs`.
     entry: bool,
+    /// Violations found so far.
     findings: Vec<Finding>,
+    /// The last doc line seen, to catch long docs.
     doc: DocLine,
 }
 
 impl Inspection {
+    /// Starts the inspection of one file.
     #[must_use]
     pub fn new(file: impl Into<String>, entry: bool) -> Self {
         Self {
@@ -86,19 +97,24 @@ impl From<Inspection> for Vec<Finding> {
     }
 }
 
+/// Name of a type, checked for doer suffixes.
 #[derive(Debug, Clone, Copy)]
 pub struct TypeName<'a> {
+    /// Identifier of the type.
     ident: &'a syn::Ident,
 }
 
 impl<'a> TypeName<'a> {
+    /// Wraps a type identifier.
     #[must_use]
     pub const fn new(ident: &'a syn::Ident) -> Self {
         Self { ident }
     }
 }
 
+/// Tells whether a name describes an object that does something.
 pub trait Agency {
+    /// Returns true for names ending in -er or -or that are not known nouns.
     fn doer(&self) -> bool;
 }
 
@@ -113,20 +129,26 @@ impl Agency for TypeName<'_> {
     }
 }
 
+/// Return type of a function, compared with its owner.
 #[derive(Debug, Clone, Copy)]
 pub struct Output<'a> {
+    /// The declared return type.
     output: &'a ReturnType,
+    /// Name of the type that owns the function.
     owner: &'a str,
 }
 
 impl<'a> Output<'a> {
+    /// Wraps a return type and the name of its owner.
     #[must_use]
     pub const fn new(output: &'a ReturnType, owner: &'a str) -> Self {
         Self { output, owner }
     }
 }
 
+/// Tells whether a function produces its own type.
 pub trait Product {
+    /// Returns true for `Self`, the owner, or a wrapper of them.
     fn selfish(&self) -> bool;
 }
 
@@ -149,19 +171,24 @@ impl Product for Output<'_> {
     }
 }
 
+/// Statements of a constructor body.
 #[derive(Debug, Clone, Copy)]
 pub struct Body<'a> {
+    /// The statements themselves.
     stmts: &'a [Stmt],
 }
 
 impl<'a> Body<'a> {
+    /// Wraps the statements of a body.
     #[must_use]
     pub const fn new(stmts: &'a [Stmt]) -> Self {
         Self { stmts }
     }
 }
 
+/// Tells whether a constructor does more than assign fields.
 pub trait Assignment {
+    /// Returns true when the body is more than one plain construction.
     fn busy(&self) -> bool;
 }
 
@@ -177,21 +204,28 @@ impl Assignment for Body<'_> {
     }
 }
 
+/// Inherent method checked against Elegant Objects rules.
 #[derive(Debug, Clone, Copy)]
 pub struct Method<'a> {
+    /// The method itself.
     item: &'a ImplItemFn,
+    /// Name of the type that owns the method.
     owner: &'a str,
+    /// Attributes of the surrounding impl block.
     outer: Marks<'a>,
 }
 
 impl<'a> Method<'a> {
+    /// Wraps a method with its owner and impl attributes.
     #[must_use]
     pub const fn new(item: &'a ImplItemFn, owner: &'a str, outer: Marks<'a>) -> Self {
         Self { item, owner, outer }
     }
 }
 
+/// Lists the rules a method breaks.
 pub trait Verdict {
+    /// Returns each broken rule with its message.
     fn verdicts(&self) -> Vec<(&'static str, String)>;
 }
 
@@ -236,22 +270,30 @@ impl Verdict for Method<'_> {
     }
 }
 
+/// Position of a doc line and the run of doc lines it ends.
 #[derive(Debug, Clone, Copy)]
 pub struct DocLine {
+    /// Line of the doc attribute.
     line: usize,
+    /// Whether it documents the enclosing module (`//!`).
     inner: bool,
+    /// How many doc lines in a row end here.
     run: usize,
 }
 
 impl DocLine {
+    /// Creates a doc line position.
     #[must_use]
     pub const fn new(line: usize, inner: bool, run: usize) -> Self {
         Self { line, inner, run }
     }
 }
 
+/// Follows doc lines one after another.
 pub trait Sequence {
+    /// Returns the position of the next doc line.
     fn next(&self, line: usize, inner: bool) -> DocLine;
+    /// Returns true on the second line of a doc, where it becomes too long.
     fn excess(&self) -> bool;
 }
 

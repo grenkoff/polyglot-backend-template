@@ -1,8 +1,11 @@
+//! Command line entry of eo-lint.
+
 use std::io::Write;
 use std::process::ExitCode;
 
 use eo_lint::source::{Source, Tree};
 
+/// Inspects the given directories and reports every violation.
 fn main() -> ExitCode {
     let mut roots: Vec<String> = std::env::args().skip(1).collect();
     if roots.is_empty() {

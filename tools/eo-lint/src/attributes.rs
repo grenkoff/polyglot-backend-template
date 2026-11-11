@@ -1,21 +1,29 @@
+//! Attributes that mark test code and waive rules.
+
 use syn::punctuated::Punctuated;
 use syn::{Attribute, Expr, ExprLit, Lit, Meta, Token};
 
+/// Comma-separated arguments of an attribute.
 type Metas = Punctuated<Meta, Token![,]>;
 
+/// One `allow(...)` entry inside `cfg_attr(eo, ...)`.
 #[derive(Debug, Clone, Copy)]
 pub struct Allowance<'a> {
+    /// The entry itself.
     meta: &'a Meta,
 }
 
 impl<'a> Allowance<'a> {
+    /// Wraps one attribute argument.
     #[must_use]
     pub const fn new(meta: &'a Meta) -> Self {
         Self { meta }
     }
 }
 
+/// Tells whether an entry waives a rule.
 pub trait Exemption {
+    /// Returns true when the entry allows the rule and gives a reason.
     fn covers(&self, rule: &str) -> bool;
 }
 
@@ -40,18 +48,24 @@ impl Exemption for Allowance<'_> {
     }
 }
 
+/// Questions about the attributes of an item.
 pub trait Attributes {
+    /// Returns true when the attributes waive the rule.
     fn waives(&self, rule: &str) -> bool;
 
+    /// Returns true when the item exists only for tests.
     fn testing(&self) -> bool;
 }
 
+/// Attributes of one item.
 #[derive(Debug, Clone, Copy)]
 pub struct Marks<'a> {
+    /// The attributes themselves.
     attrs: &'a [Attribute],
 }
 
 impl<'a> Marks<'a> {
+    /// Wraps the attributes of an item.
     #[must_use]
     pub const fn new(attrs: &'a [Attribute]) -> Self {
         Self { attrs }
