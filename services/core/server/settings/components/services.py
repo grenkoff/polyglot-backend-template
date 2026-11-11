@@ -6,3 +6,4 @@ HELLO_GRPC_ADDR = config('HELLO_GRPC_ADDR', default='localhost:50051')
 HELLO_GRPC_TIMEOUT = config('HELLO_GRPC_TIMEOUT', cast=float, default=5.0)
 
 NATS_URL = config('NATS_URL', default='nats://localhost:4222')
+NATS_TIMEOUT = config('NATS_TIMEOUT', cast=float, default=5.0)
