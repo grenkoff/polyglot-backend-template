@@ -52,6 +52,7 @@ all of them, including the GitHub settings):
 | Path | What it is |
 |------|------------|
 | `proto/` | gRPC contracts, the single source of truth between services |
+| `contracts/` | Rust crate with the code generated from `proto/`; every Rust service depends on it |
 | `services/core/` | main Django service: public HTTP API, admin, its database |
 | `services/<name>/` | Rust services (`hello` is the example) |
 | `tools/eo-lint/` | Elegant Objects linter for Rust |
@@ -167,8 +168,9 @@ Generated code:
 
 - Python: `make proto` writes `services/core/server/contracts/`; commit it
   together with the `.proto` change, CI checks it is up to date.
-- Rust: the `contracts` crate generates it at build time with `build.rs`;
-  it is never committed.
+- Rust: the `contracts` crate generates it at build time with
+  `contracts/build.rs`; it is never committed and is the only place where
+  generated Rust code lives, so lints of the workspace do not apply to it.
 - Generated code is never edited by hand.
 
 ## Design principles
@@ -560,7 +562,8 @@ Step-by-step recipes live in `docs/cookbook.md` (`/cookbook`); in short:
 3. Add the app to the layer contract in `.importlinter`.
 
 **Add a Rust service**
-1. Contract first: `proto/<name>/v1/<name>.proto`.
+1. Contract first: `proto/<name>/v1/<name>.proto`, compiled in
+   `contracts/build.rs` and exposed as a module in `contracts/src/lib.rs`.
 2. `services/<name>/` with `src/domain/`, `src/infra/`, `src/api/`,
    `src/main.rs`; add it to the workspace `members`.
 3. A `Dockerfile` like `services/hello/Dockerfile`; a service with a health
