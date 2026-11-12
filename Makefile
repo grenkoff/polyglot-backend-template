@@ -9,6 +9,7 @@ help:
 	@printf '%s\n' \
 	  'make env           create services/core/config/.env from the template' \
 	  'make proto         regenerate Python gRPC code from proto/' \
+	  'make patterns      regenerate docs/patterns.md from the code' \
 	  'make rust          fmt, clippy, tests with 100% coverage, eo-lint' \
 	  'make core          wemake-django-template CI for core in Docker' \
 	  'make ty            second type checker for core (non-blocking)' \
@@ -29,6 +30,10 @@ env:
 .PHONY: proto
 proto:
 	./scripts/proto.sh
+
+.PHONY: patterns
+patterns:
+	cargo run -q -p eo-lint --bin patterns --locked -- services tools > docs/patterns.md
 
 .PHONY: rust
 rust:
