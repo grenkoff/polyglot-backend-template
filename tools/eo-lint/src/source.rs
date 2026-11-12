@@ -7,6 +7,7 @@ use walkdir::WalkDir;
 
 use crate::finding::Finding;
 use crate::inspection::Inspection;
+use crate::isolation::Isolation;
 
 /// Directories that hold no hand-written code to inspect.
 const SKIPPED: &[&str] = &[
@@ -65,7 +66,16 @@ impl Source for Code {
         let entry = self.file.ends_with("main.rs") || self.file.ends_with("build.rs");
         let mut inspection = Inspection::new(&self.file, entry);
         inspection.visit_file(&tree);
-        Ok(inspection.into())
+        let mut findings = Vec::from(inspection);
+        if Path::new(&self.file)
+            .ancestors()
+            .any(|folder| folder.ends_with("src/domain"))
+        {
+            let mut isolation = Isolation::new(&self.file);
+            isolation.visit_file(&tree);
+            findings.extend(Vec::from(isolation));
+        }
+        Ok(findings)
     }
 }
 
