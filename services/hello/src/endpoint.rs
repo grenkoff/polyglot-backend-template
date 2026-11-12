@@ -1,10 +1,10 @@
 //! gRPC endpoint of the hello service.
 
 use contracts::hello::v1::hello_service_server::HelloService;
-use contracts::hello::v1::{GreetRequest, GreetResponse, Greeted};
+use contracts::hello::v1::{GreetRequest, GreetResponse};
 use tonic::{Request, Response, Status};
 
-use crate::events::Events;
+use crate::events::{Events, Greeted};
 use crate::greeting::{Greeting, Plain, Polite};
 use crate::name::{BlankName, Name, Raw, Trimmed};
 
@@ -41,10 +41,7 @@ impl<E: Events> HelloService for Greetings<E> {
         }
         .map_err(invalid)?;
         self.events
-            .publish(Greeted {
-                name: who,
-                text: text.clone(),
-            })
+            .publish(Greeted::new(who, text.clone()))
             .await
             .map_err(|error| Status::unavailable(error.to_string()))?;
         Ok(Response::new(GreetResponse { text }))
@@ -56,9 +53,9 @@ mod tests {
     use tonic::{Code, Request};
 
     use super::Greetings;
-    use crate::events::{Events, Journal, Memory, Undelivered};
+    use crate::events::{Events, Greeted, Journal, Memory, Undelivered};
+    use contracts::hello::v1::GreetRequest;
     use contracts::hello::v1::hello_service_server::HelloService;
-    use contracts::hello::v1::{GreetRequest, Greeted};
 
     #[tokio::test]
     async fn greets_and_reports() {
@@ -73,10 +70,7 @@ mod tests {
         assert_eq!(response.into_inner().text, "Hello, Ann! Nice to meet you.");
         assert_eq!(
             endpoint.events.entries(),
-            vec![Greeted {
-                name: String::from("Ann"),
-                text: String::from("Hello, Ann! Nice to meet you."),
-            }]
+            vec![Greeted::new("Ann", "Hello, Ann! Nice to meet you.")]
         );
     }
 

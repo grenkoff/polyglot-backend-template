@@ -2,8 +2,45 @@
 
 use std::future::Future;
 
-use contracts::hello::v1::Greeted;
 use prost::Message;
+
+/// Greeting given to someone.
+pub trait Salutation {
+    /// Returns the name of the greeted person.
+    fn name(&self) -> &str;
+    /// Returns the words of the greeting.
+    fn text(&self) -> &str;
+}
+
+/// Fact that someone was greeted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Greeted {
+    /// Name of the greeted person.
+    name: String,
+    /// Words of the greeting.
+    text: String,
+}
+
+impl Greeted {
+    /// Records that the name was greeted with the text.
+    #[must_use]
+    pub fn new(name: impl Into<String>, text: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            text: text.into(),
+        }
+    }
+}
+
+impl Salutation for Greeted {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn text(&self) -> &str {
+        &self.text
+    }
+}
 
 /// Event that could not be published.
 #[derive(Debug, thiserror::Error)]
@@ -45,9 +82,10 @@ impl Nats {
 }
 
 impl Events for Nats {
-    async fn publish(&self, event: Greeted) -> Result<(), Undelivered> {
+    async fn publish(&self, _event: Greeted) -> Result<(), Undelivered> {
+        let wire = contracts::hello::v1::Greeted::default();
         self.client
-            .publish(self.subject.clone(), event.encode_to_vec().into())
+            .publish(self.subject.clone(), wire.encode_to_vec().into())
             .await
             .map_err(Undelivered::new)
     }
