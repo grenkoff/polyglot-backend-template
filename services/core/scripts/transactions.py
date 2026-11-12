@@ -1,6 +1,7 @@
 """Reports network calls made inside database transactions."""
 
 import ast
+import sys
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Protocol, final
@@ -115,4 +116,13 @@ class TransactionTree:
 
     def problems(self) -> Iterator[str]:
         """Yields one line per network call inside a transaction."""
-        return iter(())
+        for path in sorted(self._root.rglob('*.py')):
+            yield from TransactionReport(
+                path.relative_to(self._root),
+                path.read_text(),
+            ).problems()
+
+
+if __name__ == '__main__':
+    problems = '\n'.join(TransactionTree(Path('server')).problems())
+    sys.exit(problems or None)
