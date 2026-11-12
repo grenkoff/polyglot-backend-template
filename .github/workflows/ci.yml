@@ -63,7 +63,7 @@ jobs:
         run: gitleaks git --no-banner --redact .
 
   tooling:
-    name: Tooling (npm audit)
+    name: Tooling (npm audit, jscpd)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -71,6 +71,8 @@ jobs:
         with:
           node-version: 22
       - run: npm audit
+      - run: npm ci --ignore-scripts
+      - run: make duplicates
 
   contracts:
     name: Contracts (buf, generated code)

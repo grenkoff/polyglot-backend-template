@@ -15,6 +15,7 @@ help:
 	  'make ty            second type checker for core (non-blocking)' \
 	  'make mutants       mutation testing for Rust and core' \
 	  'make security      gitleaks, cargo-deny advisories, npm audit, pip-audit' \
+	  'make duplicates    jscpd over Python and Rust' \
 	  'make up            start the whole system' \
 	  'make down          stop the whole system' \
 	  'make e2e           check a request through every service' \
@@ -53,6 +54,11 @@ security: env
 	npm audit
 	cd $(CORE) && $(COMPOSE) build web && \
 	  $(COMPOSE) run --rm --no-deps web pip-audit --desc
+
+.PHONY: duplicates
+duplicates:
+	npx --no-install jscpd --min-lines 8 --format python,rust --exit-code 1 --no-tips \
+	  --ignore '**/server/contracts/**,**/migrations/**' services tools contracts
 
 .PHONY: mutants
 mutants: mutants-rust mutants-core
@@ -93,5 +99,5 @@ commitlint:
 	npx --no-install commitlint --last --verbose
 
 .PHONY: check
-check: commitlint security rust core mutants e2e
+check: commitlint security duplicates rust core mutants e2e
 	$(MAKE) down
