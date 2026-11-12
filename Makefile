@@ -42,6 +42,7 @@ rust:
 	cargo llvm-cov --workspace --locked \
 	  --ignore-filename-regex $(RUST_COVERAGE_IGNORE) --fail-under-lines 100
 	cargo run -q -p eo-lint -- services tools
+	cargo machete
 
 .PHONY: mutants
 mutants: mutants-rust mutants-core
