@@ -43,7 +43,8 @@ class AtomicBlock:
                             func=ast.Attribute(
                                 value=ast.Name(id='transaction'),
                                 attr='atomic',
-                            ),
+                            )
+                            | ast.Name(id='atomic'),
                         ),
                     ),
                     *_,
