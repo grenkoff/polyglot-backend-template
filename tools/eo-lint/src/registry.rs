@@ -559,7 +559,9 @@ class Plain:
             /// note: starts in lowercase.
             struct Note;
             /// Plain greeting text: three words.
-            struct Plain;"#;
+            struct Plain;
+            /// Greets without a pattern.
+            fn greet() {}"#;
         assert_eq!(
             RustPatterns::new("lib.rs", code).entries().unwrap(),
             vec![Entry::new("Adapter", "Wrapped", "lib.rs")]
