@@ -1,7 +1,7 @@
 //! Database transactions that wait for nothing but themselves.
 
 use syn::visit::{self, Visit};
-use syn::{Block, ExprAwait, Ident, Local, LocalInit, Pat, Stmt};
+use syn::{Block, ExprAwait, Ident, Local, Pat, Stmt};
 
 use crate::finding::Finding;
 
@@ -37,8 +37,8 @@ impl From<Trace<'_>> for bool {
 trait Mentions {
     /// Returns true when the statement mentions the name.
     fn mentions(&self, name: &str) -> bool;
-    /// Returns true when the statement binds a new transaction.
-    fn opens(&self) -> bool;
+    /// Returns the name of the transaction the statement binds, if it binds one.
+    fn transaction(&self) -> Option<String>;
 }
 
 impl Mentions for Stmt {
@@ -48,29 +48,35 @@ impl Mentions for Stmt {
         trace.into()
     }
 
-    fn opens(&self) -> bool {
-        matches!(self, Self::Local(Local {
-            pat: Pat::Ident(_),
-            init: Some(LocalInit { .. }),
-            ..
-        }) if self.mentions("begin"))
+    fn transaction(&self) -> Option<String> {
+        match self {
+            Self::Local(Local {
+                pat: Pat::Ident(binding),
+                init: Some(_),
+                ..
+            }) if self.mentions("begin") => Some(binding.ident.to_string()),
+            _ => None,
+        }
     }
 }
 
-/// Visitor that collects every await of a statement inside a transaction.
+/// Visitor that collects awaits on other futures inside a transaction.
 #[derive(Debug)]
 struct Waits<'a> {
     /// Path of the inspected file.
     file: &'a str,
+    /// Name of the open transaction.
+    transaction: &'a str,
     /// Violations found so far.
     findings: Vec<Finding>,
 }
 
 impl<'a> Waits<'a> {
-    /// Starts collecting awaits of one file.
-    const fn new(file: &'a str) -> Self {
+    /// Starts collecting awaits that do not use the transaction.
+    const fn new(file: &'a str, transaction: &'a str) -> Self {
         Self {
             file,
+            transaction,
             findings: Vec::new(),
         }
     }
@@ -78,12 +84,16 @@ impl<'a> Waits<'a> {
 
 impl<'ast> Visit<'ast> for Waits<'_> {
     fn visit_expr_await(&mut self, node: &'ast ExprAwait) {
-        self.findings.push(Finding::new(
-            self.file,
-            node.await_token.span.start().line,
-            "EO011",
-            "awaits something else inside a transaction, do I/O before or after it",
-        ));
+        let mut trace = Trace::new(self.transaction);
+        trace.visit_expr(&node.base);
+        if !bool::from(trace) {
+            self.findings.push(Finding::new(
+                self.file,
+                node.await_token.span.start().line,
+                "EO011",
+                "awaits something else inside a transaction, do I/O before or after it",
+            ));
+        }
         visit::visit_expr_await(self, node);
     }
 }
@@ -116,17 +126,18 @@ impl From<Transactions> for Vec<Finding> {
 
 impl<'ast> Visit<'ast> for Transactions {
     fn visit_block(&mut self, node: &'ast Block) {
-        let mut open = false;
+        let mut open: Option<String> = None;
         for statement in &node.stmts {
-            if !open {
-                open = statement.opens();
-            } else if statement.mentions("commit") {
-                open = false;
-            } else {
-                let mut waits = Waits::new(&self.file);
-                waits.visit_stmt(statement);
-                self.findings.extend(waits.findings);
-            }
+            open = match open {
+                None => statement.transaction(),
+                Some(_) if statement.mentions("commit") => None,
+                Some(transaction) => {
+                    let mut waits = Waits::new(&self.file, &transaction);
+                    waits.visit_stmt(statement);
+                    self.findings.extend(waits.findings);
+                    Some(transaction)
+                }
+            };
         }
         visit::visit_block(self, node);
     }
