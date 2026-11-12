@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use syn::visit::Visit;
 use walkdir::WalkDir;
 
+use crate::code::{Code, Rust};
 use crate::finding::Finding;
 use crate::inspection::Inspection;
 use crate::isolation::Isolation;
@@ -43,43 +44,28 @@ pub trait Source {
     fn findings(&self) -> Result<Vec<Finding>, Failure>;
 }
 
-/// Rust code given as text.
-#[derive(Debug, Clone)]
-pub struct Code {
-    /// Path shown in findings.
-    file: String,
-    /// The code itself.
-    text: String,
+/// Language whose code eo-lint inspects.
+pub trait Linted {
+    /// Returns the violations found in the code of the given file.
+    fn findings(&self, file: &str, text: &str) -> Result<Vec<Finding>, Failure>;
 }
 
-impl Code {
-    /// Wraps code with the path it came from.
-    #[must_use]
-    pub fn new(file: impl Into<String>, text: impl Into<String>) -> Self {
-        Self {
-            file: file.into(),
-            text: text.into(),
-        }
-    }
-}
-
-impl Source for Code {
-    fn findings(&self) -> Result<Vec<Finding>, Failure> {
-        let tree = syn::parse_file(&self.text)
-            .map_err(|error| Failure::Parse(self.file.clone(), error))?;
-        let entry = self.file.ends_with("main.rs") || self.file.ends_with("build.rs");
-        let mut inspection = Inspection::new(&self.file, entry);
+impl Linted for Rust {
+    fn findings(&self, file: &str, text: &str) -> Result<Vec<Finding>, Failure> {
+        let tree = syn::parse_file(text).map_err(|error| Failure::Parse(file.to_owned(), error))?;
+        let entry = file.ends_with("main.rs") || file.ends_with("build.rs");
+        let mut inspection = Inspection::new(file, entry);
         inspection.visit_file(&tree);
         let mut findings = Vec::from(inspection);
-        if Path::new(&self.file)
+        if Path::new(file)
             .ancestors()
             .any(|folder| folder.ends_with("src/domain"))
         {
-            let mut isolation = Isolation::new(&self.file);
+            let mut isolation = Isolation::new(file);
             isolation.visit_file(&tree);
             findings.extend(Vec::from(isolation));
         }
-        let mut transactions = Transactions::new(&self.file);
+        let mut transactions = Transactions::new(file);
         transactions.visit_file(&tree);
         findings.extend(Vec::from(transactions));
         Ok(findings)
@@ -108,7 +94,7 @@ impl Source for Disk {
         let file = self.path.display().to_string();
         let text = std::fs::read_to_string(&self.path)
             .map_err(|error| Failure::Read(file.clone(), error))?;
-        Code::new(file, text).findings()
+        Code::new(file, text, Rust).findings()
     }
 }
 
@@ -153,12 +139,13 @@ impl Source for Tree {
 
 #[cfg(test)]
 mod tests {
-    use super::{Code, Failure, Source, Tree};
+    use super::{Failure, Source, Tree};
+    use crate::code::{Code, Rust};
 
     #[test]
     fn reports_broken_code() {
         assert!(matches!(
-            Code::new("lib.rs", "fn (").findings(),
+            Code::new("lib.rs", "fn (", Rust).findings(),
             Err(Failure::Parse(..))
         ));
     }

@@ -8,6 +8,7 @@ use walkdir::WalkDir;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
+use crate::code::{Code, Python, Rust};
 use crate::source::Failure;
 
 /// Quotes that open and close a Python docstring.
@@ -214,32 +215,17 @@ pub trait Patterns {
     fn entries(&self) -> Result<Vec<Entry>, Failure>;
 }
 
-/// Rust code given as text.
-#[derive(Debug, Clone)]
-pub struct RustPatterns {
-    /// Path shown in the registry.
-    file: String,
-    /// The code itself.
-    text: String,
+/// Language whose documentation names the patterns of its objects.
+pub trait Documented {
+    /// Returns every object of the given file that names a pattern.
+    fn entries(&self, file: &str, text: &str) -> Result<Vec<Entry>, Failure>;
 }
 
-impl RustPatterns {
-    /// Wraps code with the path it came from.
-    #[must_use]
-    pub fn new(file: impl Into<String>, text: impl Into<String>) -> Self {
-        Self {
-            file: file.into(),
-            text: text.into(),
-        }
-    }
-}
-
-impl Patterns for RustPatterns {
-    fn entries(&self) -> Result<Vec<Entry>, Failure> {
-        let tree = syn::parse_file(&self.text)
-            .map_err(|error| Failure::Parse(self.file.clone(), error))?;
+impl Documented for Rust {
+    fn entries(&self, file: &str, text: &str) -> Result<Vec<Entry>, Failure> {
+        let tree = syn::parse_file(text).map_err(|error| Failure::Parse(file.to_owned(), error))?;
         let mut catalogue = Catalogue {
-            file: &self.file,
+            file,
             claims: Vec::new(),
         };
         catalogue.visit_file(&tree);
@@ -247,36 +233,15 @@ impl Patterns for RustPatterns {
     }
 }
 
-/// Python code given as text.
-#[derive(Debug, Clone)]
-pub struct PythonPatterns {
-    /// Path shown in the registry.
-    file: String,
-    /// The code itself.
-    text: String,
-}
-
-impl PythonPatterns {
-    /// Wraps code with the path it came from.
-    #[must_use]
-    pub fn new(file: impl Into<String>, text: impl Into<String>) -> Self {
-        Self {
-            file: file.into(),
-            text: text.into(),
-        }
-    }
-}
-
-impl Patterns for PythonPatterns {
-    fn entries(&self) -> Result<Vec<Entry>, Failure> {
-        let lines: Vec<(usize, &str)> = self
-            .text
+impl Documented for Python {
+    fn entries(&self, file: &str, text: &str) -> Result<Vec<Entry>, Failure> {
+        let lines: Vec<(usize, &str)> = text
             .lines()
             .map(str::trim)
             .enumerate()
             .filter(|(_, line)| !line.is_empty())
             .collect();
-        let module = Path::new(&self.file)
+        let module = Path::new(file)
             .file_stem()
             .map(|stem| stem.to_string_lossy().into_owned())
             .unwrap_or_default();
@@ -284,7 +249,7 @@ impl Patterns for PythonPatterns {
             Docstring::new(line).name().map(|pattern| Claim {
                 pattern: pattern.to_owned(),
                 object: module,
-                file: self.file.clone(),
+                file: file.to_owned(),
                 line: index + 1,
             })
         });
@@ -293,7 +258,7 @@ impl Patterns for PythonPatterns {
             Docstring::new(pair[1].1).name().map(|pattern| Claim {
                 pattern: pattern.to_owned(),
                 object: name.to_owned(),
-                file: self.file.clone(),
+                file: file.to_owned(),
                 line: pair[1].0 + 1,
             })
         });
@@ -334,8 +299,8 @@ impl Patterns for PatternTree {
             let file = path.display().to_string();
             let text = || std::fs::read_to_string(path).map_err(|e| Failure::Read(file.clone(), e));
             match path.extension().and_then(|extension| extension.to_str()) {
-                Some("rs") => all.extend(RustPatterns::new(&file, text()?).entries()?),
-                Some("py") => all.extend(PythonPatterns::new(&file, text()?).entries()?),
+                Some("rs") => all.extend(Code::new(&file, text()?, Rust).entries()?),
+                Some("py") => all.extend(Code::new(&file, text()?, Python).entries()?),
                 _ => {}
             }
         }
@@ -376,13 +341,14 @@ impl fmt::Display for Table {
 mod tests {
     use std::path::PathBuf;
 
-    use super::{Entry, PatternTree, Patterns, PythonPatterns, RustPatterns, Table};
+    use super::{Entry, PatternTree, Patterns, Table};
+    use crate::code::{Code, Python, Rust};
     use crate::source::Failure;
 
     #[test]
     fn reports_rust_that_does_not_parse() {
         assert!(matches!(
-            RustPatterns::new("lib.rs", "fn (").entries(),
+            Code::new("lib.rs", "fn (", Rust).entries(),
             Err(Failure::Parse(..))
         ));
     }
@@ -497,7 +463,7 @@ class Plain:
     """Greets without a pattern."""
 "#;
         assert_eq!(
-            PythonPatterns::new("server/implemented.py", code)
+            Code::new("server/implemented.py", code, Python)
                 .entries()
                 .unwrap(),
             vec![
@@ -516,7 +482,7 @@ class Plain:
             /// Composition root: wires everything.
             fn main() {}";
         assert_eq!(
-            RustPatterns::new("src/main.rs", code).entries().unwrap(),
+            Code::new("src/main.rs", code, Rust).entries().unwrap(),
             vec![
                 Entry::new("Decorator", "Polite", "src/main.rs"),
                 Entry::new("Composition root", "main", "src/main.rs"),
@@ -532,7 +498,7 @@ class Plain:
             struct Walk;";
         let python = "class Walk:\n    \"\"\"Visitor: walks the tree.\"\"\"\n";
         assert_eq!(
-            RustPatterns::new("src/walk.rs", rust)
+            Code::new("src/walk.rs", rust, Rust)
                 .entries()
                 .map_err(|error| error.to_string()),
             Err(String::from(
@@ -540,7 +506,7 @@ class Plain:
             ))
         );
         assert_eq!(
-            PythonPatterns::new("walk.py", python)
+            Code::new("walk.py", python, Python)
                 .entries()
                 .map_err(|error| error.to_string()),
             Err(String::from("walk.py:2: `Visitor` is not a known pattern"))
@@ -564,7 +530,7 @@ class Plain:
             fn greet() {}
             struct Bare;"#;
         assert_eq!(
-            RustPatterns::new("lib.rs", code).entries().unwrap(),
+            Code::new("lib.rs", code, Rust).entries().unwrap(),
             vec![Entry::new("Adapter", "Wrapped", "lib.rs")]
         );
     }
@@ -572,7 +538,7 @@ class Plain:
     #[test]
     fn reports_the_first_line_of_a_python_module() {
         assert_eq!(
-            PythonPatterns::new("walk.py", "\"\"\"Visitor: walks the tree.\"\"\"\n")
+            Code::new("walk.py", "\"\"\"Visitor: walks the tree.\"\"\"\n", Python)
                 .entries()
                 .map_err(|error| error.to_string()),
             Err(String::from("walk.py:1: `Visitor` is not a known pattern"))
