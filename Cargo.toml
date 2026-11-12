@@ -28,7 +28,7 @@ walkdir = "2.5.0"
 unsafe_code = "forbid"
 unused_must_use = "deny"
 missing_docs = "deny"
-unexpected_cfgs = { level = "deny", check-cfg = ["cfg(eo)"] }
+unexpected_cfgs = "deny"
 
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
