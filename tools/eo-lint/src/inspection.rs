@@ -700,4 +700,12 @@ mod tests {
             "struct Cell { lock: tokio::sync::Mutex<u8>, data: Option<prost::bytes::Bytes> }";
         assert_eq!(rules_of("src/domain/cell.rs", code), ["EO010", "EO010"]);
     }
+
+    #[test]
+    fn rejects_outer_layers_in_domain() {
+        let code = "use crate::api::Endpoint;
+            use crate::infra::Nats;
+            use crate::domain::name::Name;";
+        assert_eq!(rules_of("src/domain/greeting.rs", code), ["EO010", "EO010"]);
+    }
 }
