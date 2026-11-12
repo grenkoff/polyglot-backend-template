@@ -651,9 +651,13 @@ Machine-enforced: `django-migration-linter` (`lintmigrations`) and
 - **Security lint stays on**: ruff `S` (bandit) in Python, clippy in Rust;
   never disable a rule to pass.
 - **Vulnerable dependencies block the merge**: pip-audit for Python,
-  cargo-deny (advisories, licenses, duplicate versions) for Rust,
+  cargo-deny for Rust (`deny.toml`: advisories, licenses, sources),
   `npm audit` for tooling. Fix by updating; when no fixed version exists,
   ask the human.
+  - An unmaintained Rust crate blocks only when a crate of the workspace
+    depends on it directly; deeper in the tree we cannot replace it.
+  - Duplicate versions of a Rust crate are reported, not blocking: they
+    come from upstream crates and cost build time, not safety.
 - **Containers**: run as a non-root user, base images pinned to a version
   tag and updated by Dependabot.
 
