@@ -139,9 +139,62 @@ impl Patterns for RustPatterns {
     }
 }
 
+/// Python code given as text.
+#[derive(Debug, Clone)]
+pub struct PythonPatterns {
+    /// Path shown in the registry.
+    file: String,
+    /// The code itself.
+    text: String,
+}
+
+impl PythonPatterns {
+    /// Wraps code with the path it came from.
+    #[must_use]
+    pub fn new(file: impl Into<String>, text: impl Into<String>) -> Self {
+        Self {
+            file: file.into(),
+            text: text.into(),
+        }
+    }
+}
+
+impl Patterns for PythonPatterns {
+    fn entries(&self) -> Result<Vec<Entry>, Failure> {
+        let _ = (&self.file, &self.text);
+        Ok(Vec::new())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Entry, Patterns, RustPatterns};
+    use super::{Entry, Patterns, PythonPatterns, RustPatterns};
+
+    #[test]
+    fn lists_python_classes_and_modules_with_patterns() {
+        let code = r#""""Composition root: binds every protocol."""
+
+import attrs
+
+
+@final
+class Remote:
+    """Adapter: asks the hello service over gRPC."""
+
+
+class Plain:
+    """Greets without a pattern."""
+"#;
+        assert_eq!(
+            PythonPatterns::new("server/implemented.py", code)
+                .entries()
+                .unwrap(),
+            vec![
+                Entry::new("Composition root", "implemented", "server/implemented.py"),
+                Entry::new("Adapter", "Remote", "server/implemented.py"),
+            ]
+        );
+    }
 
     #[test]
     fn lists_rust_items_with_patterns() {
