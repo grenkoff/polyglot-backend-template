@@ -727,4 +727,17 @@ mod tests {
             struct Cell { lock: prost::bytes::Bytes }";
         assert_eq!(rules_of("src/infra/nats.rs", code), Vec::<String>::new());
     }
+
+    #[test]
+    fn rejects_foreign_awaits_inside_transactions() {
+        let code = "struct Store;
+            impl Store {
+                async fn save(&self) {
+                    let mut tx = self.pool.begin().await?;
+                    self.nats.publish(1).await;
+                    tx.commit().await?;
+                }
+            }";
+        assert_eq!(rules_of("src/infra/store.rs", code), ["EO011"]);
+    }
 }
