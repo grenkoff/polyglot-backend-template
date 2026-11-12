@@ -275,4 +275,27 @@ class Plain:
             ]
         );
     }
+
+    #[test]
+    fn rejects_unknown_pattern_names() {
+        let rust = "/// Request for a greeting: a name and a flag.
+            struct Request;
+            /// Visitor: walks the tree.
+            struct Walk;";
+        let python = "class Walk:\n    \"\"\"Visitor: walks the tree.\"\"\"\n";
+        assert_eq!(
+            RustPatterns::new("src/walk.rs", rust)
+                .entries()
+                .map_err(|error| error.to_string()),
+            Err(String::from(
+                "src/walk.rs:3: `Visitor` is not a known pattern"
+            ))
+        );
+        assert_eq!(
+            PythonPatterns::new("walk.py", python)
+                .entries()
+                .map_err(|error| error.to_string()),
+            Err(String::from("walk.py:2: `Visitor` is not a known pattern"))
+        );
+    }
 }
