@@ -561,7 +561,8 @@ class Plain:
             /// Plain greeting text: three words.
             struct Plain;
             /// Greets without a pattern.
-            fn greet() {}"#;
+            fn greet() {}
+            struct Bare;"#;
         assert_eq!(
             RustPatterns::new("lib.rs", code).entries().unwrap(),
             vec![Entry::new("Adapter", "Wrapped", "lib.rs")]
