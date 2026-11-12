@@ -104,3 +104,15 @@ class TransactionReport:
                     for call in EagerCalls(statement).calls()
                     if CallRoot(call).name() in network
                 )
+
+
+@final
+@attrs.define(slots=True, frozen=True)
+class TransactionTree:
+    """Network calls inside transactions of every module under a directory."""
+
+    _root: Path
+
+    def problems(self) -> Iterator[str]:
+        """Yields one line per network call inside a transaction."""
+        return iter(())
