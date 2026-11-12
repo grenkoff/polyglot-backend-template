@@ -57,6 +57,21 @@ impl<'ast> Visit<'ast> for Isolation {
                 ),
             ));
         }
+        if let UseTree::Path(path) = node
+            && path.ident == "crate"
+            && let UseTree::Path(layer) = path.tree.as_ref()
+            && (layer.ident == "api" || layer.ident == "infra")
+        {
+            self.findings.push(Finding::new(
+                &self.file,
+                layer.ident.span().start().line,
+                "EO010",
+                format!(
+                    "domain code uses `crate::{}`, the domain must not depend on outer layers",
+                    layer.ident
+                ),
+            ));
+        }
     }
 
     fn visit_path(&mut self, node: &'ast Path) {
