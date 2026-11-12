@@ -57,7 +57,7 @@ def test_greeting_name_without_unicode_spaces(
 
 
 @pytest.mark.usefixtures('hello_down')
-@pytest.mark.parametrize('blank', ['   ', '\t\n', '　'])
+@pytest.mark.parametrize('blank', ['   ', '\t\n', '　', chr(0x85)])
 def test_greeting_blank_name(
     dmr_client: DMRClient,
     url: str,
