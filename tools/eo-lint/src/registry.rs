@@ -524,4 +524,33 @@ class Plain:
             Err(String::from("walk.py:2: `Visitor` is not a known pattern"))
         );
     }
+
+    #[test]
+    fn ignores_documentation_not_written_like_a_pattern() {
+        let code = r#"#[derive(Debug)]
+            #[deprecated = "Visitor: use another."]
+            #[doc = concat!("Visitor", ": hidden.")]
+            /// Adapter: adapts.
+            struct Wrapped;
+            /// Http2: speaks a protocol.
+            struct Speaker;
+            /// note: starts in lowercase.
+            struct Note;
+            /// Plain greeting text: three words.
+            struct Plain;"#;
+        assert_eq!(
+            RustPatterns::new("lib.rs", code).entries().unwrap(),
+            vec![Entry::new("Adapter", "Wrapped", "lib.rs")]
+        );
+    }
+
+    #[test]
+    fn reports_the_first_line_of_a_python_module() {
+        assert_eq!(
+            PythonPatterns::new("walk.py", "\"\"\"Visitor: walks the tree.\"\"\"\n")
+                .entries()
+                .map_err(|error| error.to_string()),
+            Err(String::from("walk.py:1: `Visitor` is not a known pattern"))
+        );
+    }
 }
