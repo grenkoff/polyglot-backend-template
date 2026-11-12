@@ -615,7 +615,7 @@ mod tests {
     }
 
     #[test]
-    fn respects_waivers() {
+    fn reports_violations_despite_waivers() {
         let code = r#"
             #[cfg_attr(eo, allow(EO006, reason = "plain data transfer object"))]
             struct Row { pub id: u8 }
@@ -628,7 +628,7 @@ mod tests {
                 pub fn bark(&self) {}
             }
         "#;
-        assert_eq!(rules(code), Vec::<String>::new());
+        assert_eq!(rules(code), ["EO006", "EO004", "EO004"]);
     }
 
     #[test]
