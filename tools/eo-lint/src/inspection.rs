@@ -746,7 +746,8 @@ mod tests {
         let code = r#"struct Store;
             impl Store {
                 async fn save(&self) {
-                    self.nats.connect().await;
+                    let id = 1;
+                    self.nats.connect(id).await;
                     let mut tx = self.pool.begin().await?;
                     sqlx::query!("INSERT").execute(&mut *tx).await?;
                     let row = sqlx::query!("SELECT").fetch_one(&mut *tx).await?;
