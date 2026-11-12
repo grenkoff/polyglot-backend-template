@@ -1,7 +1,7 @@
 //! Boundary of domain code: no I/O crates and no outer layers.
 
-use syn::UseTree;
-use syn::visit::Visit;
+use syn::visit::{self, Visit};
+use syn::{Path, UseTree};
 
 use crate::finding::Finding;
 
@@ -57,5 +57,22 @@ impl<'ast> Visit<'ast> for Isolation {
                 ),
             ));
         }
+    }
+
+    fn visit_path(&mut self, node: &'ast Path) {
+        if let Some(first) = node.segments.first()
+            && OUTSIDE.iter().any(|name| first.ident == name)
+        {
+            self.findings.push(Finding::new(
+                &self.file,
+                first.ident.span().start().line,
+                "EO010",
+                format!(
+                    "domain code uses `{}`, keep I/O in outer layers",
+                    first.ident
+                ),
+            ));
+        }
+        visit::visit_path(self, node);
     }
 }
