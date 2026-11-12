@@ -4,7 +4,7 @@ import ast
 import sys
 from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Protocol, final
+from typing import Protocol, final, override
 
 import attrs
 
@@ -37,11 +37,12 @@ class Marker(Protocol):
 
 @final
 @attrs.define(slots=True, frozen=True)
-class Atomic:
+class Atomic(Marker):
     """Expression such as `transaction.atomic` or `atomic()`."""
 
     _expression: ast.expr
 
+    @override
     def opens(self) -> bool:
         """Returns true for `atomic`, `transaction.atomic` and their calls."""
         if isinstance(self._expression, ast.Call):
@@ -51,11 +52,12 @@ class Atomic:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class AtomicBlock:
+class AtomicBlock(Block):
     """Statements that run inside a database transaction."""
 
     _node: ast.AST
 
+    @override
     def statements(self) -> Sequence[ast.stmt]:
         """Returns the body of an atomic `with` or function, or nothing."""
         match self._node:
@@ -80,12 +82,13 @@ class AtomicBlock:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class TransactionReport:
+class TransactionReport(Report):
     """Network calls inside the transactions of one Python module."""
 
     _path: Path
     _text: str
 
+    @override
     def problems(self) -> Iterator[str]:
         """Yields one line per network call inside a transaction."""
         module = ast.parse(self._text)
@@ -103,11 +106,12 @@ class TransactionReport:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class TransactionTree:
+class TransactionTree(Report):
     """Network calls inside transactions of every module under a directory."""
 
     _root: Path
 
+    @override
     def problems(self) -> Iterator[str]:
         """Yields one line per network call inside a transaction."""
         for path in sorted(self._root.rglob('*.py')):
