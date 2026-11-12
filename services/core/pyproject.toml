@@ -102,7 +102,7 @@ preview = true
 fix = true
 output-prefer-rule-codes = true
 target-version = "py314"
-line-length = 80
+line-length = 88
 extend-exclude = ["server/contracts", "mutants"]
 
 [tool.ruff.format]
