@@ -492,14 +492,15 @@ impl<'ast> Visit<'ast> for Inspection {
 
 #[cfg(test)]
 mod tests {
-    use crate::source::{Code, Source};
+    use crate::code::{Code, Rust};
+    use crate::source::Source;
 
     fn rules(code: &str) -> Vec<String> {
         rules_of("lib.rs", code)
     }
 
     fn rules_of(file: &str, code: &str) -> Vec<String> {
-        Code::new(file, code)
+        Code::new(file, code, Rust)
             .findings()
             .unwrap()
             .iter()
@@ -570,7 +571,7 @@ mod tests {
         assert_eq!(rules("fn helper() {}"), ["EO005"]);
         assert_eq!(rules("fn main() {}"), ["EO005"]);
         assert_eq!(
-            crate::source::Code::new("src/main.rs", "fn main() {}")
+            Code::new("src/main.rs", "fn main() {}", Rust)
                 .findings()
                 .unwrap(),
             Vec::new()
