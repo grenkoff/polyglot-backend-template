@@ -4,5 +4,6 @@ pub mod attributes;
 pub mod finding;
 pub mod inspection;
 pub mod isolation;
+pub mod registry;
 pub mod source;
 pub mod transaction;
