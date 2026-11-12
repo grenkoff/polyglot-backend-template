@@ -61,6 +61,13 @@ jobs:
           ./scripts/proto.sh
           git add --intent-to-add services/core/server/contracts
           git diff --exit-code -- services/core/server/contracts
+      - name: Install toolchain from rust-toolchain.toml
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: docs/patterns.md is up to date
+        run: |
+          make patterns
+          git add --intent-to-add docs/patterns.md
+          git diff --exit-code -- docs/patterns.md
 
   rust:
     name: Rust (fmt, clippy, 100% coverage, eo-lint)
