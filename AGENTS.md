@@ -413,8 +413,10 @@ NATS are outside any transaction.
 
 Machine-enforced:
 
-- Python: `scripts/check_transactions.py` (in `make check` and CI) rejects
-  gRPC, HTTP and NATS calls inside `transaction.atomic()`;
+- Python: `services/core/scripts/transactions.py` (in `make check` and CI)
+  rejects gRPC, HTTP and NATS calls inside `transaction.atomic()` and
+  functions decorated with it; code passed to `transaction.on_commit` is
+  allowed;
 - Rust: `eo-lint` rule EO011 rejects an `.await` on anything but the
   transaction itself between `begin()` and `commit()`.
 
