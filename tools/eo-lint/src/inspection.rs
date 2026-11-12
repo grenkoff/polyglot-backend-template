@@ -495,7 +495,11 @@ mod tests {
     use crate::source::{Code, Source};
 
     fn rules(code: &str) -> Vec<String> {
-        Code::new("lib.rs", code)
+        rules_of("lib.rs", code)
+    }
+
+    fn rules_of(file: &str, code: &str) -> Vec<String> {
+        Code::new(file, code)
             .findings()
             .unwrap()
             .iter()
@@ -675,5 +679,18 @@ mod tests {
     fn checks_methods_of_trait_objects() {
         let code = "trait Shape {} impl dyn Shape { pub fn area(&self) {} }";
         assert_eq!(rules(code), ["EO004"]);
+    }
+
+    #[test]
+    fn rejects_io_crates_in_domain() {
+        let code = "use std::future::Future;
+            use tokio::sync::Mutex;
+            use tonic::Status;
+            use axum::Router;
+            use sqlx::PgPool;
+            use async_nats::Client;
+            use prost::Message;
+            use contracts::hello::v1::Greeted;";
+        assert_eq!(rules_of("src/domain/name.rs", code), ["EO010"; 7]);
     }
 }
