@@ -10,10 +10,11 @@ help:
 	  'make env           create services/core/config/.env from the template' \
 	  'make proto         regenerate Python gRPC code from proto/' \
 	  'make patterns      regenerate docs/patterns.md from the code' \
-	  'make rust          fmt, clippy, tests with 100% coverage, eo-lint' \
+	  'make rust          fmt, clippy, tests with 100% coverage, eo-lint, cargo-deny' \
 	  'make core          wemake-django-template CI for core in Docker' \
 	  'make ty            second type checker for core (non-blocking)' \
 	  'make mutants       mutation testing for Rust and core' \
+	  'make security      gitleaks, cargo-deny advisories, npm audit, pip-audit' \
 	  'make up            start the whole system' \
 	  'make down          stop the whole system' \
 	  'make e2e           check a request through every service' \
@@ -43,6 +44,15 @@ rust:
 	  --ignore-filename-regex $(RUST_COVERAGE_IGNORE) --fail-under-lines 100
 	cargo run -q -p eo-lint -- services tools
 	cargo machete
+	cargo deny --locked check
+
+.PHONY: security
+security: env
+	gitleaks git --no-banner --redact .
+	cargo deny --locked check advisories
+	npm audit
+	cd $(CORE) && $(COMPOSE) build web && \
+	  $(COMPOSE) run --rm --no-deps web pip-audit --desc
 
 .PHONY: mutants
 mutants: mutants-rust mutants-core
@@ -83,5 +93,5 @@ commitlint:
 	npx --no-install commitlint --last --verbose
 
 .PHONY: check
-check: commitlint rust core mutants e2e
+check: commitlint security rust core mutants e2e
 	$(MAKE) down
