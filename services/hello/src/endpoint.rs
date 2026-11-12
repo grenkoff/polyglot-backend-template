@@ -4,9 +4,9 @@ use contracts::hello::v1::hello_service_server::HelloService;
 use contracts::hello::v1::{GreetRequest, GreetResponse};
 use tonic::{Request, Response, Status};
 
-use crate::events::{Events, Greeted};
-use crate::greeting::{Greeting, Plain, Polite};
-use crate::name::{BlankName, Name, Raw, Trimmed};
+use crate::domain::events::{Events, Greeted};
+use crate::domain::greeting::{Greeting, Plain, Polite};
+use crate::domain::name::{BlankName, Name, Raw, Trimmed};
 
 /// Greets over gRPC and publishes a fact about every greeting.
 #[derive(Debug)]
@@ -53,7 +53,7 @@ mod tests {
     use tonic::{Code, Request};
 
     use super::Greetings;
-    use crate::events::{Events, Greeted, Journal, Memory, Undelivered};
+    use crate::domain::events::{Events, Greeted, Journal, Memory, Undelivered};
     use contracts::hello::v1::GreetRequest;
     use contracts::hello::v1::hello_service_server::HelloService;
 

@@ -1,6 +1,6 @@
 //! Greetings built from names.
 
-use crate::name::{BlankName, Name};
+use crate::domain::name::{BlankName, Name};
 
 /// Text that greets someone.
 pub trait Greeting {
@@ -53,7 +53,7 @@ impl<G: Greeting> Greeting for Polite<G> {
 #[cfg(test)]
 mod tests {
     use super::{Greeting, Plain, Polite};
-    use crate::name::{BlankName, Raw, Trimmed};
+    use crate::domain::name::{BlankName, Raw, Trimmed};
 
     #[test]
     fn greets_by_name() {
