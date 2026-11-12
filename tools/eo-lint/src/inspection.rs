@@ -211,15 +211,13 @@ pub struct Method<'a> {
     item: &'a ImplItemFn,
     /// Name of the type that owns the method.
     owner: &'a str,
-    /// Attributes of the surrounding impl block.
-    outer: Marks<'a>,
 }
 
 impl<'a> Method<'a> {
-    /// Wraps a method with its owner and impl attributes.
+    /// Wraps a method with its owner.
     #[must_use]
-    pub const fn new(item: &'a ImplItemFn, owner: &'a str, outer: Marks<'a>) -> Self {
-        Self { item, owner, outer }
+    pub const fn new(item: &'a ImplItemFn, owner: &'a str) -> Self {
+        Self { item, owner }
     }
 }
 
@@ -261,10 +259,9 @@ impl Verdict for Method<'_> {
                 format!("constructor `{name}` has code, it must only assign fields"),
             ),
         ];
-        let own = Marks::new(&self.item.attrs);
         checks
             .into_iter()
-            .filter(|(rule, broken, _)| *broken && !own.waives(rule) && !self.outer.waives(rule))
+            .filter(|(_, broken, _)| *broken)
             .map(|(rule, _, message)| (rule, message))
             .collect()
     }
@@ -334,8 +331,7 @@ impl<'ast> Visit<'ast> for Inspection {
     }
 
     fn visit_item_struct(&mut self, node: &'ast ItemStruct) {
-        let marks = Marks::new(&node.attrs);
-        if TypeName::new(&node.ident).doer() && !marks.waives("EO001") {
+        if TypeName::new(&node.ident).doer() {
             self.findings.push(Finding::new(
                 &self.file,
                 node.ident.span().start().line,
@@ -352,7 +348,7 @@ impl<'ast> Visit<'ast> for Inspection {
             Fields::Unit => Vec::new(),
         };
         for field in fields {
-            if !matches!(field.vis, Visibility::Inherited) && !marks.waives("EO006") {
+            if !matches!(field.vis, Visibility::Inherited) {
                 self.findings.push(Finding::new(
                     &self.file,
                     field.span().start().line,
@@ -368,7 +364,7 @@ impl<'ast> Visit<'ast> for Inspection {
     }
 
     fn visit_item_enum(&mut self, node: &'ast ItemEnum) {
-        if TypeName::new(&node.ident).doer() && !Marks::new(&node.attrs).waives("EO001") {
+        if TypeName::new(&node.ident).doer() {
             self.findings.push(Finding::new(
                 &self.file,
                 node.ident.span().start().line,
@@ -383,8 +379,7 @@ impl<'ast> Visit<'ast> for Inspection {
     }
 
     fn visit_item_trait(&mut self, node: &'ast ItemTrait) {
-        let marks = Marks::new(&node.attrs);
-        if TypeName::new(&node.ident).doer() && !marks.waives("EO001") {
+        if TypeName::new(&node.ident).doer() {
             self.findings.push(Finding::new(
                 &self.file,
                 node.ident.span().start().line,
@@ -395,8 +390,7 @@ impl<'ast> Visit<'ast> for Inspection {
         for item in &node.items {
             if let TraitItem::Fn(method) = item {
                 let name = method.sig.ident.to_string();
-                if (name.starts_with("get_") || name.starts_with("set_")) && !marks.waives("EO002")
-                {
+                if name.starts_with("get_") || name.starts_with("set_") {
                     self.findings.push(Finding::new(
                         &self.file,
                         method.sig.ident.span().start().line,
@@ -404,7 +398,7 @@ impl<'ast> Visit<'ast> for Inspection {
                         format!("`{name}` is a getter or setter, name it after what it returns"),
                     ));
                 }
-                if method.sig.receiver().is_some_and(Mutation::mutates) && !marks.waives("EO003") {
+                if method.sig.receiver().is_some_and(Mutation::mutates) {
                     self.findings.push(Finding::new(
                         &self.file,
                         method.sig.ident.span().start().line,
@@ -418,26 +412,23 @@ impl<'ast> Visit<'ast> for Inspection {
     }
 
     fn visit_item_static(&mut self, node: &'ast ItemStatic) {
-        if !Marks::new(&node.attrs).waives("EO007") {
-            self.findings.push(Finding::new(
-                &self.file,
-                node.ident.span().start().line,
-                "EO007",
-                format!(
-                    "`static {}` is global state, pass objects explicitly",
-                    node.ident
-                ),
-            ));
-        }
+        self.findings.push(Finding::new(
+            &self.file,
+            node.ident.span().start().line,
+            "EO007",
+            format!(
+                "`static {}` is global state, pass objects explicitly",
+                node.ident
+            ),
+        ));
     }
 
     fn visit_item_fn(&mut self, node: &'ast ItemFn) {
-        let marks = Marks::new(&node.attrs);
-        if marks.testing() {
+        if Marks::new(&node.attrs).testing() {
             return;
         }
         let main = self.entry && node.sig.ident == "main";
-        if !main && !marks.waives("EO005") {
+        if !main {
             self.findings.push(Finding::new(
                 &self.file,
                 node.sig.ident.span().start().line,
@@ -452,8 +443,7 @@ impl<'ast> Visit<'ast> for Inspection {
     }
 
     fn visit_item_impl(&mut self, node: &'ast ItemImpl) {
-        let marks = Marks::new(&node.attrs);
-        if marks.testing() {
+        if Marks::new(&node.attrs).testing() {
             return;
         }
         if node.trait_.is_some() {
@@ -473,7 +463,7 @@ impl<'ast> Visit<'ast> for Inspection {
             if let ImplItem::Fn(method) = item {
                 let line = method.sig.ident.span().start().line;
                 self.findings.extend(
-                    Method::new(method, &owner, marks)
+                    Method::new(method, &owner)
                         .verdicts()
                         .into_iter()
                         .map(|(rule, message)| Finding::new(&self.file, line, rule, message)),
