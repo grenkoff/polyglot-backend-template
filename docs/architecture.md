@@ -48,6 +48,12 @@
 4. Add it to `compose.yml`, the `rust` job in `.github/workflows/ci.yml`
    already covers the whole workspace.
 
+Follow the layout of `services/hello/src`: `api/` (tonic endpoint, axum
+health check) → `infra/` (NATS adapter, settings) → `domain/` (names,
+greetings, their events and traits, no I/O); `main.rs` wires them.
+`eo-lint` rule EO010 keeps I/O crates, generated contracts and the outer
+layers out of `domain/`.
+
 ## Adding a Django app
 
 Follow the layout of `services/core/server/apps/greetings`:
