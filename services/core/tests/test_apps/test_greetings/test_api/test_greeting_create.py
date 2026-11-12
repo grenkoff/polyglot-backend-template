@@ -40,6 +40,22 @@ def test_greeting_create(
     assert response.json() == {'text': expected}
 
 
+@pytest.mark.usefixtures('hello_server')
+@pytest.mark.parametrize('visible', [chr(0x1E), chr(0xFEFF)])
+def test_greeting_name_without_unicode_spaces(
+    dmr_client: DMRClient,
+    url: str,
+    visible: str,
+) -> None:
+    response = dmr_client.post(
+        url,
+        data=msgspec.to_builtins(GreetingRequest(name=visible)),
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'text': f'Hello, {visible}!'}
+
+
 @pytest.mark.usefixtures('hello_down')
 @pytest.mark.parametrize('blank', ['   ', '\t\n', '　'])
 def test_greeting_blank_name(
