@@ -89,9 +89,7 @@ run_ci () {
   # Check production settings for gunicorn:
   gunicorn --check-config --config python:docker.django.gunicorn_config server.wsgi
 
-  # Generate a report about the state of dependencies' safety,
-  # it is not blocking, because there are too many false positives:
-  pip-audit --desc || true
+  pip-audit --desc
 
   # Checking unused or missing dependencies:
   deptry .
