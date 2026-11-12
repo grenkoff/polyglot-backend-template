@@ -95,6 +95,7 @@ run_ci () {
 
   # Checking unused or missing dependencies:
   deptry .
+  vulture
 
   # Checking `pyproject.toml` file contents:
   poetry check

@@ -5580,6 +5580,18 @@ h11 = ">=0.8"
 standard = ["httptools (>=0.8.0)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "uvloop (>=0.15.1) ; sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", "watchfiles (>=0.20)", "websockets (>=13.0)"]
 
 [[package]]
+name = "vulture"
+version = "2.16"
+description = "Find dead code"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "vulture-2.16-py3-none-any.whl", hash = "sha256:6e0f1c312cef1c87856957e5c2ca9608834a7c794c2180477f30bf0e4cc58eee"},
+    {file = "vulture-2.16.tar.gz", hash = "sha256:f8d9f6e2af03011664a3c6c240c9765b3f392917d3135fddca6d6a68d359f717"},
+]
+
+[[package]]
 name = "wcwidth"
 version = "0.9.2"
 description = "Measures the displayed width of unicode strings in a terminal"
@@ -5679,4 +5691,4 @@ dev = ["doc8", "flake8", "flake8-import-order", "rstcheck[sphinx]", "ruff", "sph
 [metadata]
 lock-version = "2.1"
 python-versions = "==3.14.9"
-content-hash = "eece5947406f7c0c86e4251e75e7a47db7dc070513613900591bff6df884523f"
+content-hash = "ed6d07c6deef2ad8c1a066aad756178ee8ebfbc0d80d0d88287617a9a488bb68"
