@@ -1,6 +1,7 @@
 [package]
 name = "eo-lint"
 version = "0.1.0"
+default-run = "eo-lint"
 description = "Checks Rust code against Elegant Objects rules that clippy cannot express"
 edition.workspace = true
 rust-version.workspace = true
