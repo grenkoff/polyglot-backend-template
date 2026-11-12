@@ -693,4 +693,11 @@ mod tests {
             use contracts::hello::v1::Greeted;";
         assert_eq!(rules_of("src/domain/name.rs", code), ["EO010"; 7]);
     }
+
+    #[test]
+    fn rejects_full_paths_to_io_crates_in_domain() {
+        let code =
+            "struct Cell { lock: tokio::sync::Mutex<u8>, data: Option<prost::bytes::Bytes> }";
+        assert_eq!(rules_of("src/domain/cell.rs", code), ["EO010", "EO010"]);
+    }
 }
