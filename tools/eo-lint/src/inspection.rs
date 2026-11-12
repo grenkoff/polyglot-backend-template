@@ -711,6 +711,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_grouped_and_renamed_imports_in_domain() {
+        let code = "use crate::{api::Endpoint, domain::name::Name};
+            use crate::{infra, domain};
+            use {prost::Message, std::fmt::Display};
+            use tokio as runtime;
+            use crate::*;";
+        assert_eq!(rules_of("src/domain/greeting.rs", code), ["EO010"; 4]);
+    }
+
+    #[test]
     fn allows_io_crates_outside_domain() {
         let code = "use tokio::sync::Mutex;
             use crate::domain::events::Events;
