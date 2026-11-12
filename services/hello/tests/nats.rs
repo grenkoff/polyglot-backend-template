@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use futures::StreamExt;
 use hello::domain::events::{Events, Greeted};
-use hello::events::Nats;
+use hello::infra::nats::Nats;
 use prost::Message;
 use testcontainers_modules::nats::Nats as NatsImage;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;
