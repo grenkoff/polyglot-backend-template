@@ -2,7 +2,7 @@
 
 import ast
 from collections.abc import Iterator
-from typing import Protocol, final
+from typing import Protocol, final, override
 
 import attrs
 
@@ -34,11 +34,12 @@ class Calls(Protocol):
 
 @final
 @attrs.define(slots=True, frozen=True)
-class EagerCalls:
+class EagerCalls(Calls):
     """Calls that code makes at once, leaving out code given to `on_commit`."""
 
     _node: ast.AST
 
+    @override
     def calls(self) -> Iterator[ast.Call]:
         """Yields the calls of the node and its children, outside `on_commit`."""
         if isinstance(self._node, ast.Call):
@@ -51,11 +52,12 @@ class EagerCalls:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class NetworkImport:
+class NetworkImport(Names):
     """Names an import statement binds to network clients."""
 
     _node: ast.AST
 
+    @override
     def names(self) -> Iterator[str]:
         """Yields the names bound to network packages or gRPC stubs."""
         match self._node:
@@ -81,11 +83,12 @@ class NetworkImport:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class CallRoot:
+class CallRoot(Target):
     """Call seen by the name it starts from, as `grpc` in `grpc.connect()`."""
 
     _call: ast.Call
 
+    @override
     def reaches(self, names: frozenset[str]) -> bool:
         """Returns true when the called expression starts from one of the names."""
         target = self._call.func

@@ -4,7 +4,7 @@ import ast
 import sys
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Protocol, final
+from typing import Protocol, final, override
 
 import attrs
 
@@ -29,12 +29,13 @@ class Report(Protocol):
 
 @final
 @attrs.define(slots=True, frozen=True)
-class DocstringReport:
+class DocstringReport(Report):
     """Docstring problems of one module, class or function."""
 
     _place: str
     _node: _Documented
 
+    @override
     def problems(self) -> Iterator[str]:
         """Yields one line per problem."""
         docstring = ast.get_docstring(self._node)
@@ -46,12 +47,13 @@ class DocstringReport:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class ModuleReport:
+class ModuleReport(Report):
     """Docstring problems of one Python module."""
 
     _path: Path
     _text: str
 
+    @override
     def problems(self) -> Iterator[str]:
         """Yields one line per problem."""
         module = ast.parse(self._text)
@@ -69,12 +71,13 @@ class ModuleReport:
 
 @final
 @attrs.define(slots=True, frozen=True)
-class TreeReport:
+class TreeReport(Report):
     """Docstring problems of every Python module under a directory."""
 
     _root: Path
     _excluded: tuple[str, ...]
 
+    @override
     def problems(self) -> Iterator[str]:
         """Yields one line per problem."""
         for path in sorted(self._root.rglob('*.py')):
