@@ -362,6 +362,37 @@ mod tests {
     }
 
     #[test]
+    fn skips_generated_and_test_code() {
+        let decorated = "/// Decorator: wraps.\nstruct Hidden;";
+        let adapted = "class Hidden:\n    \"\"\"Adapter: adapts.\"\"\"\n";
+        let root = folder(
+            "skipped",
+            &[
+                ("apps/real.rs", "/// Decorator: wraps.\nstruct Real;"),
+                ("server/contracts/hello_pb2_grpc.py", adapted),
+                ("apps/migrations/0001_initial.py", adapted),
+                ("tests/fake.py", adapted),
+                ("target/debug/build.rs", decorated),
+                (".venv/lib/site.py", adapted),
+                ("node_modules/tool/index.rs", decorated),
+                ("mutants/copy.rs", decorated),
+            ],
+        );
+
+        let entries = PatternTree::new(&root).entries().unwrap();
+
+        std::fs::remove_dir_all(&root).unwrap();
+        assert_eq!(
+            entries,
+            vec![Entry::new(
+                "Decorator",
+                "Real",
+                root.join("apps/real.rs").display().to_string()
+            )]
+        );
+    }
+
+    #[test]
     fn lists_python_classes_and_modules_with_patterns() {
         let code = r#""""Composition root: binds every protocol."""
 
