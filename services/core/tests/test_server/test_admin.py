@@ -67,9 +67,7 @@ def test_admin_add(
     url = _make_url(site, model, 'add')
     response = admin_client.get(url)
     expected_status = (
-        HTTPStatus.FORBIDDEN
-        if model in _RESTRICTED_ADMIN_ADD_MODELS
-        else HTTPStatus.OK
+        HTTPStatus.FORBIDDEN if model in _RESTRICTED_ADMIN_ADD_MODELS else HTTPStatus.OK
     )
 
     assert response.status_code == expected_status

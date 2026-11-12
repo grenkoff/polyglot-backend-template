@@ -8,9 +8,7 @@ from typing import Protocol, final
 
 import attrs
 
-type _Documented = (
-    ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef
-)
+type _Documented = ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef
 
 _DEFINITIONS = (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 _TEST_PREFIX = 'test_'
