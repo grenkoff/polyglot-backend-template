@@ -26,31 +26,58 @@ class Block(Protocol):
         """Returns the statements, or nothing outside the context."""
 
 
+class Marker(Protocol):
+    """Python expression that may open a database transaction."""
+
+    def opens(self) -> bool:
+        """Returns true when the expression opens a transaction."""
+
+
+@final
+@attrs.define(slots=True, frozen=True)
+class Atomic:
+    """Expression such as `transaction.atomic` or `atomic()`."""
+
+    _expression: ast.expr
+
+    def opens(self) -> bool:
+        """Returns true for `atomic`, `transaction.atomic` and their calls."""
+        match self._expression:
+            case ast.Call(func=func):
+                return Atomic(func).opens()
+            case (
+                ast.Attribute(value=ast.Name(id='transaction'), attr='atomic')
+                | ast.Name(id='atomic')
+            ):
+                return True
+            case _:
+                return False
+
+
 @final
 @attrs.define(slots=True, frozen=True)
 class AtomicBlock:
-    """Statements that run inside a `transaction.atomic()` block."""
+    """Statements that run inside a database transaction."""
 
     _node: ast.AST
 
     def statements(self) -> Sequence[ast.stmt]:
-        """Returns the body of an atomic `with`, or nothing for other nodes."""
+        """Returns the body of an atomic `with` or function, or nothing."""
         match self._node:
-            case ast.With(
-                items=[
-                    ast.withitem(
-                        context_expr=ast.Call(
-                            func=ast.Attribute(
-                                value=ast.Name(id='transaction'),
-                                attr='atomic',
-                            )
-                            | ast.Name(id='atomic'),
-                        ),
-                    ),
-                    *_,
-                ],
-                body=body,
+            case ast.With(items=contexts, body=body) if any(
+                Atomic(context.context_expr).opens() for context in contexts
             ):
+                return body
+            case (
+                ast.FunctionDef(
+                    decorator_list=decorators,
+                    body=body,
+                )
+                | ast.AsyncFunctionDef(
+                    decorator_list=decorators,
+                    body=body,
+                )
+            ) if any(Atomic(decorator).opens() for decorator in decorators):
                 return body
             case _:
                 return ()
