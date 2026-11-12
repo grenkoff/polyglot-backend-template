@@ -11,6 +11,7 @@ import attrs
 from scripts.calls import CallRoot, EagerCalls, NetworkImport
 
 _PROBLEM = 'network call inside a transaction'
+_ATOMIC = frozenset(('atomic', 'transaction.atomic'))
 
 
 class Report(Protocol):
@@ -43,16 +44,9 @@ class Atomic:
 
     def opens(self) -> bool:
         """Returns true for `atomic`, `transaction.atomic` and their calls."""
-        match self._expression:
-            case ast.Call(func=func):
-                return Atomic(func).opens()
-            case (
-                ast.Attribute(value=ast.Name(id='transaction'), attr='atomic')
-                | ast.Name(id='atomic')
-            ):
-                return True
-            case _:
-                return False
+        if isinstance(self._expression, ast.Call):
+            return Atomic(self._expression.func).opens()
+        return ast.unparse(self._expression) in _ATOMIC
 
 
 @final
@@ -103,7 +97,7 @@ class TransactionReport:
                 yield from (
                     f'{self._path}:{call.lineno}: {_PROBLEM}'
                     for call in EagerCalls(statement).calls()
-                    if CallRoot(call).name() in network
+                    if CallRoot(call).reaches(network)
                 )
 
 

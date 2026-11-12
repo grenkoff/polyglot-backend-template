@@ -8,6 +8,7 @@ import attrs
 
 _NETWORK_PACKAGES = frozenset(('grpc', 'requests', 'httpx', 'urllib', 'nats'))
 _GENERATED_GRPC = '_pb2_grpc'
+_ON_COMMIT = 'on_commit'
 
 
 class Names(Protocol):
@@ -17,11 +18,11 @@ class Names(Protocol):
         """Yields the bound names."""
 
 
-class Root(Protocol):
-    """Name that some Python expression starts from."""
+class Target(Protocol):
+    """Python call that may reach one of some names."""
 
-    def name(self) -> str:
-        """Returns the name, or an empty string when there is none."""
+    def reaches(self, names: frozenset[str]) -> bool:
+        """Returns true when the call starts from one of the names."""
 
 
 class Calls(Protocol):
@@ -40,15 +41,10 @@ class EagerCalls:
 
     def calls(self) -> Iterator[ast.Call]:
         """Yields the calls of the node and its children, outside `on_commit`."""
-        match self._node:
-            case ast.Call(
-                func=ast.Attribute(attr='on_commit') | ast.Name(id='on_commit'),
-            ):
+        if isinstance(self._node, ast.Call):
+            if ast.unparse(self._node.func).rpartition('.')[2] == _ON_COMMIT:
                 return
-            case ast.Call() as call:
-                yield call
-            case _:
-                pass
+            yield self._node
         for child in ast.iter_child_nodes(self._node):
             yield from EagerCalls(child).calls()
 
@@ -86,17 +82,13 @@ class NetworkImport:
 @final
 @attrs.define(slots=True, frozen=True)
 class CallRoot:
-    """Name a call starts from, such as `grpc` in `grpc.insecure_channel()`."""
+    """Call seen by the name it starts from, as `grpc` in `grpc.connect()`."""
 
     _call: ast.Call
 
-    def name(self) -> str:
-        """Returns the first name of the called expression."""
+    def reaches(self, names: frozenset[str]) -> bool:
+        """Returns true when the called expression starts from one of the names."""
         target = self._call.func
         while isinstance(target, ast.Attribute):
             target = target.value
-        match target:
-            case ast.Name(id=name):
-                return name
-            case _:
-                return ''
+        return isinstance(target, ast.Name) and target.id in names
