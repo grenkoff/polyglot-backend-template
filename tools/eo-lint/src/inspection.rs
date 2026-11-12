@@ -705,7 +705,8 @@ mod tests {
     fn rejects_outer_layers_in_domain() {
         let code = "use crate::api::Endpoint;
             use crate::infra::Nats;
-            use crate::domain::name::Name;";
+            use crate::domain::name::Name;
+            use crate::domain::events::Events;";
         assert_eq!(rules_of("src/domain/greeting.rs", code), ["EO010", "EO010"]);
     }
 
