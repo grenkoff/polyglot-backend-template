@@ -381,10 +381,14 @@ Machine-enforced (`make check` and CI):
 | unused dependencies | deptry | cargo-machete |
 | duplicated code | jscpd (both languages, from 8 lines) | jscpd |
 
-Framework entrypoints that look unused to vulture (Django views, admin
-classes, management commands, settings) go to
-`services/core/whitelist_vulture.py`. The agent asks the human before
-adding an entry there; never keep real dead code alive through it.
+vulture skips `server/settings/`, which Django reads by name. Other
+framework entrypoints that look unused to vulture (view methods, admin
+classes, management commands, model fields) go to `ignore_names` under
+`[tool.vulture]` in `services/core/pyproject.toml`. cargo-machete ignores
+only dependencies that generated code or a crate feature needs, listed
+under `[package.metadata.cargo-machete]` of the crate. The agent asks the
+human before adding a name to either list; never keep real dead code
+alive through them.
 
 ## Data integrity
 
@@ -1035,8 +1039,8 @@ Always ask before:
 1. Creating an Issue (show its text first).
 2. Starting work on acceptance criteria (show the test list first).
 3. Adding, removing or replacing a dependency (give alternatives).
-4. Adding a tool directive, a vulture whitelist entry or any other
-   exception to a rule.
+4. Adding a tool directive, a name ignored by vulture or cargo-machete or
+   any other exception to a rule.
 5. Changing a rule, a threshold, a CI job or this file.
 6. Changing a public contract in a breaking way (`proto/`, the HTTP API,
    a database schema in a contract step).
