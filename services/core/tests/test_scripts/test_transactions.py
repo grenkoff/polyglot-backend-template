@@ -95,3 +95,9 @@ def test_reports_problems_under_a_directory(tmp_path: Path) -> None:
     problems = list(TransactionTree(tmp_path).problems())
 
     assert problems == [f'apps/store.py:4: {_PROBLEM}']
+
+
+def test_accepts_the_code_of_core() -> None:
+    problems = list(TransactionTree(Path('server')).problems())
+
+    assert not problems
