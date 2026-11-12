@@ -3,6 +3,7 @@
 use syn::spanned::Spanned;
 use syn::visit::Visit;
 use syn::{Attribute, Expr, ExprLit, ItemFn, ItemStruct, Lit, Meta};
+use walkdir::WalkDir;
 
 use std::path::{Path, PathBuf};
 
@@ -302,10 +303,20 @@ impl PatternTree {
 
 impl Patterns for PatternTree {
     fn entries(&self) -> Result<Vec<Entry>, Failure> {
-        self.root
-            .try_exists()
-            .map(|_| Vec::new())
-            .map_err(|error| Failure::Read(self.root.display().to_string(), error))
+        let mut all = Vec::new();
+        for entry in WalkDir::new(&self.root) {
+            let entry = entry?;
+            let path = entry.path();
+            let file = path.display().to_string();
+            let text = || std::fs::read_to_string(path).map_err(|e| Failure::Read(file.clone(), e));
+            match path.extension().and_then(|extension| extension.to_str()) {
+                Some("rs") => all.extend(RustPatterns::new(&file, text()?).entries()?),
+                Some("py") => all.extend(PythonPatterns::new(&file, text()?).entries()?),
+                _ => {}
+            }
+        }
+        all.sort();
+        Ok(all)
     }
 }
 
