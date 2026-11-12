@@ -62,3 +62,18 @@ def test_reports_calls_in_atomic_functions() -> None:
     problems = list(TransactionReport(_MODULE, source).problems())
 
     assert problems == [f'a.py:5: {_PROBLEM}', f'a.py:8: {_PROBLEM}']
+
+
+def test_accepts_calls_outside_and_on_commit() -> None:
+    source = _source(
+        'import nats',
+        'from django.db import transaction',
+        'nats.connect()',
+        'with transaction.atomic():',
+        '    transaction.on_commit(lambda: nats.connect())',
+        'nats.connect()',
+    )
+
+    problems = list(TransactionReport(_MODULE, source).problems())
+
+    assert not problems
