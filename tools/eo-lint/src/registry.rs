@@ -3,7 +3,12 @@
 use syn::visit::Visit;
 use syn::{Attribute, Expr, ExprLit, ItemFn, ItemStruct, Lit, Meta};
 
+use std::path::Path;
+
 use crate::source::Failure;
+
+/// Quotes that open and close a Python docstring.
+const QUOTES: &str = r#"""""#;
 
 /// Names of the patterns that documentation may start with.
 const PATTERNS: &[&str] = &[
@@ -18,7 +23,47 @@ const PATTERNS: &[&str] = &[
     "Composition root",
 ];
 
-/// First line of the documentation of an item.
+/// First line of a documentation, which may start with a pattern name.
+#[derive(Debug, Clone, Copy)]
+struct Summary<'a> {
+    /// The line itself.
+    line: &'a str,
+}
+
+impl<'a> Summary<'a> {
+    /// Wraps the first line of a documentation.
+    const fn new(line: &'a str) -> Self {
+        Self { line }
+    }
+
+    /// Returns the pattern the line names, if it names one.
+    fn pattern(&self) -> Option<String> {
+        let (prefix, _) = self.line.trim().split_once(": ")?;
+        PATTERNS.contains(&prefix).then(|| prefix.to_owned())
+    }
+}
+
+/// Line of Python code that may be a one-line docstring.
+#[derive(Debug, Clone, Copy)]
+struct Docstring<'a> {
+    /// The line itself.
+    line: &'a str,
+}
+
+impl<'a> Docstring<'a> {
+    /// Wraps a line of Python code.
+    const fn new(line: &'a str) -> Self {
+        Self { line }
+    }
+
+    /// Returns the pattern the docstring names, if the line is one that names it.
+    fn pattern(&self) -> Option<String> {
+        let text = self.line.strip_prefix(QUOTES)?.strip_suffix(QUOTES)?;
+        Summary::new(text).pattern()
+    }
+}
+
+/// Documentation of a Rust item.
 #[derive(Debug, Clone, Copy)]
 struct Documentation<'a> {
     /// Attributes of the item.
@@ -43,8 +88,7 @@ impl<'a> Documentation<'a> {
             },
             _ => None,
         })?;
-        let (prefix, _) = first.trim().split_once(": ")?;
-        PATTERNS.contains(&prefix).then(|| prefix.to_owned())
+        Summary::new(&first).pattern()
     }
 }
 
@@ -161,8 +205,27 @@ impl PythonPatterns {
 
 impl Patterns for PythonPatterns {
     fn entries(&self) -> Result<Vec<Entry>, Failure> {
-        let _ = (&self.file, &self.text);
-        Ok(Vec::new())
+        let lines: Vec<&str> = self
+            .text
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .collect();
+        let module = Path::new(&self.file)
+            .file_stem()
+            .map(|stem| stem.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let heading = lines
+            .first()
+            .and_then(|line| Docstring::new(line).pattern())
+            .map(|pattern| Entry::new(pattern, module, &self.file));
+        let classes = lines.windows(2).filter_map(|pair| {
+            let name = pair[0].strip_prefix("class ")?.split(['(', ':']).next()?;
+            Docstring::new(pair[1])
+                .pattern()
+                .map(|pattern| Entry::new(pattern, name, &self.file))
+        });
+        Ok(heading.into_iter().chain(classes).collect())
     }
 }
 
