@@ -82,8 +82,11 @@ impl Nats {
 }
 
 impl Events for Nats {
-    async fn publish(&self, _event: Greeted) -> Result<(), Undelivered> {
-        let wire = contracts::hello::v1::Greeted::default();
+    async fn publish(&self, event: Greeted) -> Result<(), Undelivered> {
+        let wire = contracts::hello::v1::Greeted {
+            name: event.name().to_owned(),
+            text: event.text().to_owned(),
+        };
         self.client
             .publish(self.subject.clone(), wire.encode_to_vec().into())
             .await
