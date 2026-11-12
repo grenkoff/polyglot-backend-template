@@ -7,7 +7,7 @@ from typing import Protocol, final
 
 import attrs
 
-from scripts.calls import CallRoot, NetworkImport
+from scripts.calls import CallRoot, EagerCalls, NetworkImport
 
 _PROBLEM = 'network call inside a transaction'
 
@@ -101,6 +101,6 @@ class TransactionReport:
             for statement in AtomicBlock(node).statements():
                 yield from (
                     f'{self._path}:{call.lineno}: {_PROBLEM}'
-                    for call in ast.walk(statement)
-                    if isinstance(call, ast.Call) and CallRoot(call).name() in network
+                    for call in EagerCalls(statement).calls()
+                    if CallRoot(call).name() in network
                 )

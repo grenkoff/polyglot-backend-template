@@ -24,6 +24,35 @@ class Root(Protocol):
         """Returns the name, or an empty string when there is none."""
 
 
+class Calls(Protocol):
+    """Calls that some Python code makes."""
+
+    def calls(self) -> Iterator[ast.Call]:
+        """Yields the calls in the order they appear."""
+
+
+@final
+@attrs.define(slots=True, frozen=True)
+class EagerCalls:
+    """Calls that code makes at once, leaving out code given to `on_commit`."""
+
+    _node: ast.AST
+
+    def calls(self) -> Iterator[ast.Call]:
+        """Yields the calls of the node and its children, outside `on_commit`."""
+        match self._node:
+            case ast.Call(
+                func=ast.Attribute(attr='on_commit') | ast.Name(id='on_commit'),
+            ):
+                return
+            case ast.Call() as call:
+                yield call
+            case _:
+                pass
+        for child in ast.iter_child_nodes(self._node):
+            yield from EagerCalls(child).calls()
+
+
 @final
 @attrs.define(slots=True, frozen=True)
 class NetworkImport:
