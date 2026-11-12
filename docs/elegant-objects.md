@@ -37,24 +37,11 @@ Polite::new(Plain::new(Trimmed::new(Raw::new(name)))).text()
 
 See `services/hello/src/greeting.rs` and `services/hello/src/name.rs`.
 
-## Exceptions to the rules
+## No exceptions
 
-Sometimes a framework or a crate leaves no choice. Then the exception is
-written down on the item as an attribute with a mandatory reason
-(the code has no comments, see `AGENTS.md`):
-
-```rust
-#[cfg_attr(eo, allow(EO006, reason = "serde needs public fields"))]
-struct Row { pub id: u64 }
-```
-
-The `eo` cfg is never set, so the compiler ignores the attribute; `eo-lint`
-reads it. An exemption without a non-empty `reason` does not count. It can
-be put on a struct, an enum, a trait, an `impl` block or a method. Never
-disable a rule globally.
-
-Python uses the narrowest `# noqa: <code>` directive on the exact line,
-only where Django or another framework dictates the shape of the code.
+There is no way to waive a rule: no attribute, no directive, no
+configuration. When a framework or a crate seems to leave no choice, stop
+and ask the human, as "Elegant Objects" in `AGENTS.md` describes.
 
 ## What clippy already checks
 
