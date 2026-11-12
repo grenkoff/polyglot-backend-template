@@ -84,6 +84,7 @@ ipython = "^9.14"
 deptry = "^0.25"
 codespell = "^2.4"
 typos = "^1.49"
+vulture = "^2.16"
 
 [tool.poetry.group.docs]
 optional = true
@@ -415,4 +416,25 @@ files.extend-exclude = [
 default.extend-identifiers = { _SerT = "_SerT" }
 default.extend-ignore-re = [
   "\\b[0-9a-f]{7,40}\\b", # git commit hashes
+]
+
+[tool.vulture]
+paths = ["server", "scripts"]
+exclude = ["server/settings/", "server/contracts/", "migrations/"]
+ignore_names = [
+  "post",
+  "handle",
+  "help",
+  "Command",
+  "BlogPostAdmin",
+  "application",
+  "handler404",
+  "handler500",
+  "app_name",
+  "created_at",
+  "updated_at",
+  "verbose_name",
+  "verbose_name_plural",
+  "allow_reconnect",
+  "cls",
 ]
