@@ -12,6 +12,18 @@ use crate::source::Failure;
 /// Quotes that open and close a Python docstring.
 const QUOTES: &str = r#"""""#;
 
+/// Directories with generated, copied, third-party or test code.
+const SKIPPED: &[&str] = &[
+    "target",
+    ".git",
+    ".venv",
+    "node_modules",
+    "mutants",
+    "tests",
+    "contracts",
+    "migrations",
+];
+
 /// Names of the patterns that documentation may start with.
 const PATTERNS: &[&str] = &[
     "Decorator",
@@ -304,7 +316,10 @@ impl PatternTree {
 impl Patterns for PatternTree {
     fn entries(&self) -> Result<Vec<Entry>, Failure> {
         let mut all = Vec::new();
-        for entry in WalkDir::new(&self.root) {
+        let walk = WalkDir::new(&self.root).into_iter().filter_entry(|entry| {
+            entry.depth() == 0 || !SKIPPED.contains(&entry.file_name().to_string_lossy().as_ref())
+        });
+        for entry in walk {
             let entry = entry?;
             let path = entry.path();
             let file = path.display().to_string();
