@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, final
+from typing import TYPE_CHECKING, ClassVar, TypedDict, final
 
 import attrs
 from nats.aio.client import Client
@@ -18,6 +18,12 @@ if TYPE_CHECKING:
     from django.core.management.base import OutputWrapper
 
     from server.apps.greetings.logic.greetings import Inbox, Journal
+
+
+class _Reconnection(TypedDict):
+    """Options of NATS that decide whether a lost connection is retried."""
+
+    allow_reconnect: bool
 
 
 @final
@@ -40,6 +46,8 @@ class AnnouncedInbox:
 class NatsListener:
     """Records greeting events from NATS until stopped, then drains."""
 
+    _fail_fast: ClassVar[_Reconnection] = {'allow_reconnect': False}
+
     _settings: LazySettings
     _journal: Journal
     _output: OutputWrapper
@@ -51,8 +59,8 @@ class NatsListener:
             await client.connect(
                 self._settings.NATS_URL,
                 connect_timeout=self._settings.NATS_TIMEOUT,
-                allow_reconnect=False,
                 drain_timeout=self._settings.NATS_TIMEOUT,
+                **self._fail_fast,
             )
         except TimeoutError:
             await client.close()
