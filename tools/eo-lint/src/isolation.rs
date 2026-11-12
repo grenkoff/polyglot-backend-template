@@ -1,7 +1,7 @@
 //! Boundary of domain code: no I/O crates and no outer layers.
 
 use syn::visit::{self, Visit};
-use syn::{Path, UseTree};
+use syn::{Ident, Path, UseTree};
 
 use crate::finding::Finding;
 
@@ -15,6 +15,38 @@ const OUTSIDE: &[&str] = &[
     "prost",
     "contracts",
 ];
+
+/// Name from an outer layer used by domain code.
+#[derive(Debug, Clone)]
+struct Intrusion<'a> {
+    /// Path of the domain file.
+    file: &'a str,
+    /// Identifier where the name is used.
+    ident: &'a Ident,
+    /// The name as the message shows it.
+    name: String,
+}
+
+impl<'a> Intrusion<'a> {
+    /// Points at a name used in a domain file.
+    const fn new(file: &'a str, ident: &'a Ident, name: String) -> Self {
+        Self { file, ident, name }
+    }
+}
+
+impl From<Intrusion<'_>> for Finding {
+    fn from(intrusion: Intrusion<'_>) -> Self {
+        Self::new(
+            intrusion.file,
+            intrusion.ident.span().start().line,
+            "EO010",
+            format!(
+                "domain code uses `{}`, which belongs to an outer layer",
+                intrusion.name
+            ),
+        )
+    }
+}
 
 /// Visitor that collects what domain code takes from outer layers.
 #[derive(Debug)]
@@ -44,33 +76,20 @@ impl From<Isolation> for Vec<Finding> {
 
 impl<'ast> Visit<'ast> for Isolation {
     fn visit_use_tree(&mut self, node: &'ast UseTree) {
-        if let UseTree::Path(path) = node
-            && OUTSIDE.iter().any(|name| path.ident == name)
-        {
-            self.findings.push(Finding::new(
-                &self.file,
-                path.ident.span().start().line,
-                "EO010",
-                format!(
-                    "domain code uses `{}`, keep I/O in outer layers",
-                    path.ident
-                ),
-            ));
+        let UseTree::Path(path) = node else {
+            return;
+        };
+        if OUTSIDE.iter().any(|name| path.ident == name) {
+            self.findings
+                .push(Intrusion::new(&self.file, &path.ident, path.ident.to_string()).into());
         }
-        if let UseTree::Path(path) = node
-            && path.ident == "crate"
+        if path.ident == "crate"
             && let UseTree::Path(layer) = path.tree.as_ref()
             && (layer.ident == "api" || layer.ident == "infra")
         {
-            self.findings.push(Finding::new(
-                &self.file,
-                layer.ident.span().start().line,
-                "EO010",
-                format!(
-                    "domain code uses `crate::{}`, the domain must not depend on outer layers",
-                    layer.ident
-                ),
-            ));
+            self.findings.push(
+                Intrusion::new(&self.file, &layer.ident, format!("crate::{}", layer.ident)).into(),
+            );
         }
     }
 
@@ -78,15 +97,8 @@ impl<'ast> Visit<'ast> for Isolation {
         if let Some(first) = node.segments.first()
             && OUTSIDE.iter().any(|name| first.ident == name)
         {
-            self.findings.push(Finding::new(
-                &self.file,
-                first.ident.span().start().line,
-                "EO010",
-                format!(
-                    "domain code uses `{}`, keep I/O in outer layers",
-                    first.ident
-                ),
-            ));
+            self.findings
+                .push(Intrusion::new(&self.file, &first.ident, first.ident.to_string()).into());
         }
         visit::visit_path(self, node);
     }
