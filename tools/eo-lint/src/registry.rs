@@ -4,7 +4,7 @@ use syn::spanned::Spanned;
 use syn::visit::Visit;
 use syn::{Attribute, Expr, ExprLit, ItemFn, ItemStruct, Lit, Meta};
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::source::Failure;
 
@@ -283,9 +283,72 @@ impl Patterns for PythonPatterns {
     }
 }
 
+/// Rust and Python code under a directory.
+#[derive(Debug, Clone)]
+pub struct PatternTree {
+    /// Root directory to walk.
+    root: PathBuf,
+}
+
+impl PatternTree {
+    /// Points at a root directory.
+    #[must_use]
+    pub fn new(root: impl AsRef<Path>) -> Self {
+        Self {
+            root: root.as_ref().to_path_buf(),
+        }
+    }
+}
+
+impl Patterns for PatternTree {
+    fn entries(&self) -> Result<Vec<Entry>, Failure> {
+        self.root
+            .try_exists()
+            .map(|_| Vec::new())
+            .map_err(|error| Failure::Read(self.root.display().to_string(), error))
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Entry, Patterns, PythonPatterns, RustPatterns};
+    use std::path::PathBuf;
+
+    use super::{Entry, PatternTree, Patterns, PythonPatterns, RustPatterns};
+
+    fn folder(name: &str, files: &[(&str, &str)]) -> PathBuf {
+        let root = std::env::temp_dir().join(format!("eo-registry-{}-{name}", std::process::id()));
+        for (path, text) in files {
+            let file = root.join(path);
+            std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+            std::fs::write(file, text).unwrap();
+        }
+        root
+    }
+
+    #[test]
+    fn sorts_rows_by_pattern_and_object() {
+        let root = folder(
+            "sorted",
+            &[
+                ("b.rs", "/// Decorator: wraps.\nstruct Zeta;"),
+                ("a.py", "class Alpha:\n    \"\"\"Adapter: adapts.\"\"\"\n"),
+                ("c.rs", "/// Decorator: wraps.\nstruct Beta;"),
+            ],
+        );
+
+        let entries = PatternTree::new(&root).entries().unwrap();
+
+        std::fs::remove_dir_all(&root).unwrap();
+        let file = |name: &str| root.join(name).display().to_string();
+        assert_eq!(
+            entries,
+            vec![
+                Entry::new("Adapter", "Alpha", file("a.py")),
+                Entry::new("Decorator", "Beta", file("c.rs")),
+                Entry::new("Decorator", "Zeta", file("b.rs")),
+            ]
+        );
+    }
 
     #[test]
     fn lists_python_classes_and_modules_with_patterns() {
