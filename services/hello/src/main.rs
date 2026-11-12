@@ -1,8 +1,8 @@
 //! Entry point of the hello service.
 
 use contracts::hello::v1::hello_service_server::HelloServiceServer;
-use hello::endpoint::Greetings;
-use hello::health::{Health, Routes};
+use hello::api::endpoint::Greetings;
+use hello::api::health::{Health, Routes};
 use hello::infra::nats::Nats;
 use hello::infra::setting::{Env, Setting};
 
