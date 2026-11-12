@@ -26,6 +26,7 @@ walkdir = "2.5.0"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+unused = { level = "deny", priority = -1 }
 unused_must_use = "deny"
 missing_docs = "deny"
 unexpected_cfgs = "deny"
