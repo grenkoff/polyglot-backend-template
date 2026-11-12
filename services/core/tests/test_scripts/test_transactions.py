@@ -45,3 +45,20 @@ def test_reports_http_and_nats_in_atomic() -> None:
     problems = list(TransactionReport(_MODULE, source).problems())
 
     assert problems == [f'a.py:{line}: {_PROBLEM}' for line in range(7, 11)]
+
+
+def test_reports_calls_in_atomic_functions() -> None:
+    source = _source(
+        'import nats',
+        'from django.db import transaction',
+        '@transaction.atomic',
+        'def save():',
+        '    nats.connect()',
+        '@transaction.atomic()',
+        'async def store():',
+        '    await nats.connect()',
+    )
+
+    problems = list(TransactionReport(_MODULE, source).problems())
+
+    assert problems == [f'a.py:5: {_PROBLEM}', f'a.py:8: {_PROBLEM}']
