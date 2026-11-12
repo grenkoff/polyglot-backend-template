@@ -2,15 +2,14 @@
 
 use std::time::Duration;
 
-use contracts::hello::v1::Greeted;
 use futures::StreamExt;
-use hello::events::{Events, Nats};
+use hello::events::{Events, Greeted, Nats};
 use prost::Message;
 use testcontainers_modules::nats::Nats as NatsImage;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;
 
 #[tokio::test]
-async fn publishes_events_to_nats() {
+async fn publishes_events_to_nats_as_protobuf() {
     let server = NatsImage::default().start().await.unwrap();
     let url = format!(
         "nats://{}:{}",
@@ -20,13 +19,9 @@ async fn publishes_events_to_nats() {
     let client = async_nats::connect(url).await.unwrap();
     let mut subscriber = client.subscribe("hello.v1.greeted").await.unwrap();
     client.flush().await.unwrap();
-    let event = Greeted {
-        name: String::from("Ann"),
-        text: String::from("Hello, Ann!"),
-    };
 
     Nats::new(client, "hello.v1.greeted")
-        .publish(event.clone())
+        .publish(Greeted::new("Ann", "Hello, Ann!"))
         .await
         .unwrap();
 
@@ -34,5 +29,11 @@ async fn publishes_events_to_nats() {
         .await
         .expect("no event arrived within 5 seconds")
         .unwrap();
-    assert_eq!(Greeted::decode(message.payload).unwrap(), event);
+    assert_eq!(
+        contracts::hello::v1::Greeted::decode(message.payload).unwrap(),
+        contracts::hello::v1::Greeted {
+            name: String::from("Ann"),
+            text: String::from("Hello, Ann!"),
+        }
+    );
 }
