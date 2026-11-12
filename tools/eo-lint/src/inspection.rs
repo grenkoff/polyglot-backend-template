@@ -740,4 +740,20 @@ mod tests {
             }";
         assert_eq!(rules_of("src/infra/store.rs", code), ["EO011"]);
     }
+
+    #[test]
+    fn accepts_awaits_on_the_transaction() {
+        let code = r#"struct Store;
+            impl Store {
+                async fn save(&self) {
+                    self.nats.connect().await;
+                    let mut tx = self.pool.begin().await?;
+                    sqlx::query!("INSERT").execute(&mut *tx).await?;
+                    let row = sqlx::query!("SELECT").fetch_one(&mut *tx).await?;
+                    tx.commit().await?;
+                    self.nats.publish(row).await;
+                }
+            }"#;
+        assert_eq!(rules_of("src/infra/store.rs", code), Vec::<String>::new());
+    }
 }
