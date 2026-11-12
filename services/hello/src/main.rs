@@ -2,9 +2,9 @@
 
 use contracts::hello::v1::hello_service_server::HelloServiceServer;
 use hello::endpoint::Greetings;
-use hello::events::Nats;
 use hello::health::{Health, Routes};
-use hello::setting::{Env, Setting};
+use hello::infra::nats::Nats;
+use hello::infra::setting::{Env, Setting};
 
 /// Composition root: wires the hello service and serves gRPC and health checks.
 #[tokio::main]
