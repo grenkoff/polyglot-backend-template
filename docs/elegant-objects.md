@@ -35,7 +35,8 @@ greeting.text(polite: true)
 Polite::new(Plain::new(Trimmed::new(Raw::new(name)))).text()
 ```
 
-See `services/hello/src/greeting.rs` and `services/hello/src/name.rs`.
+See `services/hello/src/domain/greeting.rs` and
+`services/hello/src/domain/name.rs`.
 
 ## No exceptions
 

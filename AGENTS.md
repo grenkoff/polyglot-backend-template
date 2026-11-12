@@ -201,9 +201,10 @@ Layers:
 | `core` (Python) | `api` → `infra` → `models` → `logic`; apps independent of each other | import-linter (`services/core/.importlinter`) |
 | Rust services | `api` (tonic, axum) → `infra` (sqlx, async-nats, gRPC clients) → `domain`; `main.rs` wires them | `eo-lint` rule EO010 |
 
-EO010: modules under `src/domain/` import no I/O crate (`tokio`, `tonic`,
-`axum`, `sqlx`, `async_nats`, `prost`) and nothing from `api` or `infra`.
-The domain defines traits; `infra` implements them.
+EO010: modules under `src/domain/` use no I/O crate (`tokio`, `tonic`,
+`axum`, `sqlx`, `async_nats`, `prost`), no generated code from `contracts`
+and nothing from `api` or `infra`. The domain defines traits and its own
+types; `infra` implements the traits and translates the types into protobuf.
 
 Size and complexity: wemake-python-styleguide in Python; in Rust clippy
 `too_many_lines` (40), `too_many_arguments` (4), `cognitive_complexity`
