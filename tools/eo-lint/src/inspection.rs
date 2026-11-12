@@ -708,4 +708,12 @@ mod tests {
             use crate::domain::name::Name;";
         assert_eq!(rules_of("src/domain/greeting.rs", code), ["EO010", "EO010"]);
     }
+
+    #[test]
+    fn allows_io_crates_outside_domain() {
+        let code = "use tokio::sync::Mutex;
+            use crate::domain::events::Events;
+            struct Cell { lock: prost::bytes::Bytes }";
+        assert_eq!(rules_of("src/infra/nats.rs", code), Vec::<String>::new());
+    }
 }
