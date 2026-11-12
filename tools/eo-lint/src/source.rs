@@ -8,6 +8,7 @@ use walkdir::WalkDir;
 use crate::finding::Finding;
 use crate::inspection::Inspection;
 use crate::isolation::Isolation;
+use crate::transaction::Transactions;
 
 /// Directories that hold no hand-written code to inspect.
 const SKIPPED: &[&str] = &[
@@ -75,6 +76,9 @@ impl Source for Code {
             isolation.visit_file(&tree);
             findings.extend(Vec::from(isolation));
         }
+        let mut transactions = Transactions::new(&self.file);
+        transactions.visit_file(&tree);
+        findings.extend(Vec::from(transactions));
         Ok(findings)
     }
 }
