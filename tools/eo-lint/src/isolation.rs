@@ -1,9 +1,35 @@
 //! Boundary of domain code: no I/O crates and no outer layers.
 
 use syn::visit::{self, Visit};
-use syn::{Ident, Path, UseTree};
+use syn::{Ident, ItemUse, Path, UseTree};
 
 use crate::finding::Finding;
+
+/// Parts of an import tree.
+trait Imports {
+    /// Returns the trees that start a name, with groups opened.
+    fn roots(&self) -> Vec<&UseTree>;
+    /// Returns the first name of the tree, if it starts with one.
+    fn head(&self) -> Option<&Ident>;
+}
+
+impl Imports for UseTree {
+    fn roots(&self) -> Vec<&UseTree> {
+        match self {
+            Self::Group(group) => group.items.iter().flat_map(Imports::roots).collect(),
+            Self::Path(_) | Self::Name(_) | Self::Rename(_) | Self::Glob(_) => vec![self],
+        }
+    }
+
+    fn head(&self) -> Option<&Ident> {
+        match self {
+            Self::Path(path) => Some(&path.ident),
+            Self::Name(name) => Some(&name.ident),
+            Self::Rename(rename) => Some(&rename.ident),
+            Self::Group(_) | Self::Glob(_) => None,
+        }
+    }
+}
 
 /// Crates that do I/O or describe the wire format.
 const OUTSIDE: &[&str] = &[
@@ -75,20 +101,28 @@ impl From<Isolation> for Vec<Finding> {
 }
 
 impl<'ast> Visit<'ast> for Isolation {
-    fn visit_use_tree(&mut self, node: &'ast UseTree) {
-        let UseTree::Path(path) = node else {
-            return;
-        };
-        if OUTSIDE.iter().any(|name| path.ident == name) {
-            self.findings
-                .push(Intrusion::new(&self.file, &path.ident, path.ident.to_string()).into());
-        }
-        if path.ident == "crate"
-            && let UseTree::Path(layer) = path.tree.as_ref()
-            && (layer.ident == "api" || layer.ident == "infra")
-        {
-            self.findings.push(
-                Intrusion::new(&self.file, &layer.ident, format!("crate::{}", layer.ident)).into(),
+    fn visit_item_use(&mut self, node: &'ast ItemUse) {
+        for root in node.tree.roots() {
+            let intrusions: Vec<(&Ident, String)> = match root {
+                UseTree::Path(path) if path.ident == "crate" => path
+                    .tree
+                    .roots()
+                    .into_iter()
+                    .filter_map(Imports::head)
+                    .filter(|layer| *layer == "api" || *layer == "infra")
+                    .map(|layer| (layer, format!("crate::{layer}")))
+                    .collect(),
+                other => other
+                    .head()
+                    .filter(|name| OUTSIDE.iter().any(|outside| name == outside))
+                    .map(|name| (name, name.to_string()))
+                    .into_iter()
+                    .collect(),
+            };
+            self.findings.extend(
+                intrusions
+                    .into_iter()
+                    .map(|(ident, name)| Finding::from(Intrusion::new(&self.file, ident, name))),
             );
         }
     }
