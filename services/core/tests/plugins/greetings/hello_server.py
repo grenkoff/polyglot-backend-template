@@ -11,28 +11,11 @@ import grpc
 import pytest
 from django.conf import LazySettings
 
+from server.apps.greetings.logic.constants import UNICODE_SPACES
 from server.contracts.hello.v1 import hello_pb2, hello_pb2_grpc
 
 _SLOW_ANSWER: Final = 2
 _SHORT_TIMEOUT: Final = 0.2
-_UNICODE_SPACES: Final = ''.join(
-    map(
-        chr,
-        (
-            *range(0x9, 0xE),
-            0x20,
-            0x85,
-            0xA0,
-            0x1680,
-            *range(0x2000, 0x200B),
-            0x2028,
-            0x2029,
-            0x202F,
-            0x205F,
-            0x3000,
-        ),
-    ),
-)
 
 
 @final
@@ -46,7 +29,7 @@ class _FakeHello(hello_pb2_grpc.HelloServiceServicer):
         context: grpc.ServicerContext,
     ) -> hello_pb2.GreetResponse:
         """Greets the name in the request or aborts when it is blank."""
-        name = request.name.strip(_UNICODE_SPACES)
+        name = request.name.strip(UNICODE_SPACES)
         if not name:
             context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT,
