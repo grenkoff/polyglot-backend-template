@@ -32,6 +32,9 @@ pub enum Failure {
     /// A directory could not be walked.
     #[error("cannot walk directories: {0}")]
     Walk(#[from] walkdir::Error),
+    /// A documentation names a pattern outside the allowed list.
+    #[error("{0}:{1}: `{2}` is not a known pattern")]
+    Unknown(String, usize, String),
 }
 
 /// Rust code that can be inspected.

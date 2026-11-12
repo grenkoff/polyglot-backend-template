@@ -1,5 +1,6 @@
 //! Registry of the design patterns that the documentation of the code names.
 
+use syn::spanned::Spanned;
 use syn::visit::Visit;
 use syn::{Attribute, Expr, ExprLit, ItemFn, ItemStruct, Lit, Meta};
 
@@ -36,10 +37,41 @@ impl<'a> Summary<'a> {
         Self { line }
     }
 
-    /// Returns the pattern the line names, if it names one.
-    fn pattern(&self) -> Option<String> {
+    /// Returns the name the line starts with, when it is written like a pattern name.
+    fn name(&self) -> Option<&'a str> {
         let (prefix, _) = self.line.trim().split_once(": ")?;
-        PATTERNS.contains(&prefix).then(|| prefix.to_owned())
+        let mut words = prefix.split(' ');
+        let first = words.next()?;
+        let rest: Vec<&str> = words.collect();
+        let capitalized = first.chars().next().is_some_and(char::is_uppercase)
+            && first.chars().all(char::is_alphabetic);
+        let lowercase = rest.iter().all(|word| word.chars().all(char::is_lowercase));
+        (capitalized && lowercase && rest.len() < 2).then_some(prefix)
+    }
+}
+
+/// Object whose documentation starts with something written like a pattern name.
+#[derive(Debug, Clone)]
+struct Claim {
+    /// The name the documentation starts with.
+    pattern: String,
+    /// Name of the object.
+    object: String,
+    /// File the object lives in.
+    file: String,
+    /// Line of the documentation.
+    line: usize,
+}
+
+impl TryFrom<Claim> for Entry {
+    type Error = Failure;
+
+    fn try_from(claim: Claim) -> Result<Self, Failure> {
+        if PATTERNS.contains(&claim.pattern.as_str()) {
+            Ok(Self::new(claim.pattern, claim.object, claim.file))
+        } else {
+            Err(Failure::Unknown(claim.file, claim.line, claim.pattern))
+        }
     }
 }
 
@@ -56,10 +88,10 @@ impl<'a> Docstring<'a> {
         Self { line }
     }
 
-    /// Returns the pattern the docstring names, if the line is one that names it.
-    fn pattern(&self) -> Option<String> {
+    /// Returns the name the docstring starts with, when it is written like a pattern.
+    fn name(&self) -> Option<&'a str> {
         let text = self.line.strip_prefix(QUOTES)?.strip_suffix(QUOTES)?;
-        Summary::new(text).pattern()
+        Summary::new(text).name()
     }
 }
 
@@ -76,43 +108,53 @@ impl<'a> Documentation<'a> {
         Self { attrs }
     }
 
-    /// Returns the pattern the documentation names, if it names one.
-    fn pattern(&self) -> Option<String> {
-        let first = self.attrs.iter().find_map(|attr| match &attr.meta {
+    /// Returns the name the documentation starts with and its line, if written like a pattern.
+    fn name(&self) -> Option<(String, usize)> {
+        let (first, line) = self.attrs.iter().find_map(|attr| match &attr.meta {
             Meta::NameValue(pair) if pair.path.is_ident("doc") => match &pair.value {
                 Expr::Lit(ExprLit {
                     lit: Lit::Str(text),
                     ..
-                }) => Some(text.value()),
+                }) => Some((text.value(), attr.span().start().line)),
                 _ => None,
             },
             _ => None,
         })?;
-        Summary::new(&first).pattern()
+        Summary::new(&first)
+            .name()
+            .map(|name| (name.to_owned(), line))
     }
 }
 
-/// Visitor that collects the items whose documentation names a pattern.
+/// Visitor that collects the items whose documentation starts like a pattern name.
 #[derive(Debug)]
 struct Catalogue<'a> {
     /// Path shown in the registry.
     file: &'a str,
-    /// Entries found so far.
-    entries: Vec<Entry>,
+    /// Claims found so far.
+    claims: Vec<Claim>,
 }
 
 impl<'ast> Visit<'ast> for Catalogue<'_> {
     fn visit_item_struct(&mut self, node: &'ast ItemStruct) {
-        if let Some(pattern) = Documentation::new(&node.attrs).pattern() {
-            self.entries
-                .push(Entry::new(pattern, node.ident.to_string(), self.file));
+        if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
+            self.claims.push(Claim {
+                pattern,
+                object: node.ident.to_string(),
+                file: self.file.to_owned(),
+                line,
+            });
         }
     }
 
     fn visit_item_fn(&mut self, node: &'ast ItemFn) {
-        if let Some(pattern) = Documentation::new(&node.attrs).pattern() {
-            self.entries
-                .push(Entry::new(pattern, node.sig.ident.to_string(), self.file));
+        if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
+            self.claims.push(Claim {
+                pattern,
+                object: node.sig.ident.to_string(),
+                file: self.file.to_owned(),
+                line,
+            });
         }
     }
 }
@@ -176,10 +218,10 @@ impl Patterns for RustPatterns {
             .map_err(|error| Failure::Parse(self.file.clone(), error))?;
         let mut catalogue = Catalogue {
             file: &self.file,
-            entries: Vec::new(),
+            claims: Vec::new(),
         };
         catalogue.visit_file(&tree);
-        Ok(catalogue.entries)
+        catalogue.claims.into_iter().map(Entry::try_from).collect()
     }
 }
 
@@ -205,27 +247,39 @@ impl PythonPatterns {
 
 impl Patterns for PythonPatterns {
     fn entries(&self) -> Result<Vec<Entry>, Failure> {
-        let lines: Vec<&str> = self
+        let lines: Vec<(usize, &str)> = self
             .text
             .lines()
             .map(str::trim)
-            .filter(|line| !line.is_empty())
+            .enumerate()
+            .filter(|(_, line)| !line.is_empty())
             .collect();
         let module = Path::new(&self.file)
             .file_stem()
             .map(|stem| stem.to_string_lossy().into_owned())
             .unwrap_or_default();
-        let heading = lines
-            .first()
-            .and_then(|line| Docstring::new(line).pattern())
-            .map(|pattern| Entry::new(pattern, module, &self.file));
-        let classes = lines.windows(2).filter_map(|pair| {
-            let name = pair[0].strip_prefix("class ")?.split(['(', ':']).next()?;
-            Docstring::new(pair[1])
-                .pattern()
-                .map(|pattern| Entry::new(pattern, name, &self.file))
+        let heading = lines.first().and_then(|&(index, line)| {
+            Docstring::new(line).name().map(|pattern| Claim {
+                pattern: pattern.to_owned(),
+                object: module,
+                file: self.file.clone(),
+                line: index + 1,
+            })
         });
-        Ok(heading.into_iter().chain(classes).collect())
+        let classes = lines.windows(2).filter_map(|pair| {
+            let name = pair[0].1.strip_prefix("class ")?.split(['(', ':']).next()?;
+            Docstring::new(pair[1].1).name().map(|pattern| Claim {
+                pattern: pattern.to_owned(),
+                object: name.to_owned(),
+                file: self.file.clone(),
+                line: pair[1].0 + 1,
+            })
+        });
+        heading
+            .into_iter()
+            .chain(classes)
+            .map(Entry::try_from)
+            .collect()
     }
 }
 
