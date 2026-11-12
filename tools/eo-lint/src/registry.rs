@@ -377,6 +377,26 @@ mod tests {
     use std::path::PathBuf;
 
     use super::{Entry, PatternTree, Patterns, PythonPatterns, RustPatterns, Table};
+    use crate::source::Failure;
+
+    #[test]
+    fn reports_rust_that_does_not_parse() {
+        assert!(matches!(
+            RustPatterns::new("lib.rs", "fn (").entries(),
+            Err(Failure::Parse(..))
+        ));
+    }
+
+    #[test]
+    fn reports_files_that_cannot_be_read() {
+        let root = folder("unreadable", &[]);
+        std::fs::create_dir_all(root.join("broken.rs")).unwrap();
+
+        let entries = PatternTree::new(&root).entries();
+
+        std::fs::remove_dir_all(&root).unwrap();
+        assert!(matches!(entries, Err(Failure::Read(..))));
+    }
 
     #[test]
     fn renders_a_markdown_table() {
