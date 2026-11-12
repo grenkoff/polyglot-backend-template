@@ -1,6 +1,77 @@
 //! Registry of the design patterns that the documentation of the code names.
 
+use syn::visit::Visit;
+use syn::{Attribute, Expr, ExprLit, ItemFn, ItemStruct, Lit, Meta};
+
 use crate::source::Failure;
+
+/// Names of the patterns that documentation may start with.
+const PATTERNS: &[&str] = &[
+    "Decorator",
+    "Strategy",
+    "Adapter",
+    "Facade",
+    "Factory",
+    "Observer",
+    "State",
+    "Command",
+    "Composition root",
+];
+
+/// First line of the documentation of an item.
+#[derive(Debug, Clone, Copy)]
+struct Documentation<'a> {
+    /// Attributes of the item.
+    attrs: &'a [Attribute],
+}
+
+impl<'a> Documentation<'a> {
+    /// Wraps the attributes of an item.
+    const fn new(attrs: &'a [Attribute]) -> Self {
+        Self { attrs }
+    }
+
+    /// Returns the pattern the documentation names, if it names one.
+    fn pattern(&self) -> Option<String> {
+        let first = self.attrs.iter().find_map(|attr| match &attr.meta {
+            Meta::NameValue(pair) if pair.path.is_ident("doc") => match &pair.value {
+                Expr::Lit(ExprLit {
+                    lit: Lit::Str(text),
+                    ..
+                }) => Some(text.value()),
+                _ => None,
+            },
+            _ => None,
+        })?;
+        let (prefix, _) = first.trim().split_once(": ")?;
+        PATTERNS.contains(&prefix).then(|| prefix.to_owned())
+    }
+}
+
+/// Visitor that collects the items whose documentation names a pattern.
+#[derive(Debug)]
+struct Catalogue<'a> {
+    /// Path shown in the registry.
+    file: &'a str,
+    /// Entries found so far.
+    entries: Vec<Entry>,
+}
+
+impl<'ast> Visit<'ast> for Catalogue<'_> {
+    fn visit_item_struct(&mut self, node: &'ast ItemStruct) {
+        if let Some(pattern) = Documentation::new(&node.attrs).pattern() {
+            self.entries
+                .push(Entry::new(pattern, node.ident.to_string(), self.file));
+        }
+    }
+
+    fn visit_item_fn(&mut self, node: &'ast ItemFn) {
+        if let Some(pattern) = Documentation::new(&node.attrs).pattern() {
+            self.entries
+                .push(Entry::new(pattern, node.sig.ident.to_string(), self.file));
+        }
+    }
+}
 
 /// Object that implements a pattern, as its documentation says.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -57,8 +128,14 @@ impl RustPatterns {
 
 impl Patterns for RustPatterns {
     fn entries(&self) -> Result<Vec<Entry>, Failure> {
-        syn::parse_file(&self.text).map_err(|error| Failure::Parse(self.file.clone(), error))?;
-        Ok(Vec::new())
+        let tree = syn::parse_file(&self.text)
+            .map_err(|error| Failure::Parse(self.file.clone(), error))?;
+        let mut catalogue = Catalogue {
+            file: &self.file,
+            entries: Vec::new(),
+        };
+        catalogue.visit_file(&tree);
+        Ok(catalogue.entries)
     }
 }
 
