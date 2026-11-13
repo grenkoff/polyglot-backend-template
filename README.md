@@ -36,8 +36,9 @@ proto/               gRPC contracts, the single source of truth
 services/core/       Django main service (public HTTP API, admin, database)
 services/hello/      example Rust service (gRPC + health check + NATS events)
 tools/eo-lint/       Elegant Objects linter for Rust
-scripts/             code generation and end-to-end check
-docs/                architecture and coding rules
+scripts/             code generation, checks, end-to-end check, agent hooks
+docs/                architecture, coding rules, cookbook, patterns registry
+.claude/             Claude Code hooks, commands and a review subagent
 compose.yml          the whole system
 ```
 
@@ -70,7 +71,8 @@ exist, then delete them.
 Code is written test-first, see [docs/tdd.md](docs/tdd.md). For AI agents
 it is enforced by the [Probity](https://github.com/nizos/probity) hook
 (`make setup` once, then run the agent where the code lives); for
-everyone by coverage gates and mutation testing in CI.
+everyone by coverage gates and mutation testing in CI. A second hook
+formats every file the agent writes with ruff or rustfmt.
 
 ## Requirements
 
@@ -83,6 +85,9 @@ gitleaks and the cargo tools listed in [`AGENTS.md`](AGENTS.md#developer-environ
 
 - [Architecture](docs/architecture.md)
 - [Elegant Objects rules](docs/elegant-objects.md)
+- [Test-driven development](docs/tdd.md)
+- [Cookbook](docs/cookbook.md): step-by-step recipes for typical tasks
+- [Design patterns registry](docs/patterns.md)
 - [Rules for AI agents](AGENTS.md)
 - [Django service](services/core/README.md)
 
