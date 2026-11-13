@@ -118,6 +118,32 @@ impl<'a> Docstring<'a> {
     }
 }
 
+/// Name of the module a Rust file holds: its stem, or its directory for `mod.rs`.
+#[derive(Debug, Clone, Copy)]
+struct Module<'a> {
+    /// Path of the file.
+    file: &'a str,
+}
+
+impl<'a> Module<'a> {
+    /// Points at a file.
+    const fn new(file: &'a str) -> Self {
+        Self { file }
+    }
+}
+
+impl fmt::Display for Module<'_> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let path = Path::new(self.file);
+        let name = if path.file_stem() == Some("mod".as_ref()) {
+            path.parent().and_then(Path::file_name)
+        } else {
+            path.file_stem()
+        };
+        write!(formatter, "{}", name.unwrap_or_default().to_string_lossy())
+    }
+}
+
 /// Documentation of a Rust item.
 #[derive(Debug, Clone, Copy)]
 struct Documentation<'a> {
@@ -237,7 +263,12 @@ impl Documented for Rust {
             claims: Vec::new(),
         };
         catalogue.visit_file(&tree);
-        catalogue.claims.into_iter().map(Entry::try_from).collect()
+        Documentation::new(&tree.attrs)
+            .claim(&Module::new(file), file)
+            .into_iter()
+            .chain(catalogue.claims)
+            .map(Entry::try_from)
+            .collect()
     }
 }
 
