@@ -75,8 +75,15 @@ DATABASES = {
         'PORT': config('DJANGO_DATABASE_PORT', cast=int),
         'CONN_MAX_AGE': config('CONN_MAX_AGE', cast=int, default=60),
         'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c statement_timeout=15000ms -c lock_timeout=5s',
+            'connect_timeout': config(
+                'DJANGO_DATABASE_CONNECT_TIMEOUT',
+                cast=int,
+                default=10,
+            ),
+            'options': '-c statement_timeout={}s -c lock_timeout={}s'.format(
+                config('DJANGO_DATABASE_STATEMENT_TIMEOUT', cast=int, default=15),
+                config('DJANGO_DATABASE_LOCK_TIMEOUT', cast=int, default=5),
+            ),
             # consider using 'isolation_level' set to 'serializable'
         },
     },
