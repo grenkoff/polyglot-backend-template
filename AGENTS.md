@@ -161,8 +161,9 @@ Evolution:
 3. A breaking change goes to a new package `v<N+1>`; the old version keeps
    working until every client has moved, then it is removed in a separate
    pull request.
-4. `buf lint`, `buf format` and `buf breaking` (against `develop`) run in
-   CI; a breaking change outside a new version fails the build.
+4. `buf lint` and `buf format` run in `make proto`; `make contracts` adds
+   `buf breaking` against `develop` and runs in CI. A breaking change
+   outside a new version fails the build.
 
 Generated code:
 
@@ -855,8 +856,7 @@ A task is done only when all of these are true. Never call it done before.
 2. The branch history shows the TDD cycles (`test` → `feat|fix` →
    `refactor`).
 3. `make check` is green locally on the last commit.
-4. Contracts and generated code match (`make proto`, `make patterns`
-   produce no diff).
+4. Contracts and generated code match (`make contracts` is green).
 5. Documentation follows the change: `README.md`, `docs/`, this file when
    a rule or a command changed, `config/.env.template` for every new
    setting.
@@ -878,7 +878,7 @@ a pull request merges only with every required job green.
 |-----|--------|
 | commits | commit messages and the pull request title (commitlint) |
 | secrets | gitleaks over the changes and the history |
-| contracts | `buf lint`, `buf format`, `buf breaking`; generated code and `docs/patterns.md` up to date |
+| contracts | `make contracts`: `buf lint`, `buf format`, `buf breaking`; generated code and `docs/patterns.md` up to date |
 | rust | rustfmt, clippy, tests, coverage (80% overall, 100% in `domain/`), `eo-lint`, cargo-machete, cargo-deny |
 | rust-mutants | cargo-mutants: zero survivors |
 | core | the wemake-django-template pipeline (ruff, wemake-python-styleguide, mypy, import-linter, pytest, schemathesis, Django checks, migration linters, deptry), pip-audit, vulture, transaction check, coverage (80% overall, 100% in `logic/`), mutmut |
@@ -976,6 +976,7 @@ so local runs match CI.
 | `make setup` | installs Node tooling, Rust components and the editor environment of `core` |
 | `make proto` | checks the contracts with `buf` and regenerates the Python code |
 | `make patterns` | regenerates `docs/patterns.md` |
+| `make contracts` | `make proto` and `make patterns`, `buf breaking` against `develop`, fails when generated code or `docs/patterns.md` differ from the commit |
 | `make rust` | rustfmt, clippy, tests, coverage, `eo-lint`, cargo-machete, cargo-deny |
 | `make core` | the wemake-django-template pipeline for `core` inside Docker |
 | `make ty` | ty for `core` (non-blocking) |
