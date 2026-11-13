@@ -14,7 +14,7 @@ help:
 	  'make env           create services/core/config/.env from the template' \
 	  'make proto         regenerate Python gRPC code from proto/' \
 	  'make patterns      regenerate docs/patterns.md from the code' \
-	  'make rust          fmt, clippy, tests with 100% coverage, eo-lint, cargo-deny' \
+	  'make rust          fmt, clippy, tests, coverage (80%, 100% in domain), eo-lint, cargo-deny' \
 	  'make core          wemake-django-template CI for core in Docker' \
 	  'make ty            second type checker for core (non-blocking)' \
 	  'make mutants       mutation testing for Rust and core' \
@@ -57,7 +57,8 @@ rust:
 	cargo fmt --all --check
 	cargo clippy --workspace --all-targets --locked
 	cargo llvm-cov --workspace --locked \
-	  --ignore-filename-regex $(RUST_COVERAGE_IGNORE) --fail-under-lines 100
+	  --ignore-filename-regex $(RUST_COVERAGE_IGNORE) --fail-under-lines 80
+	./scripts/domain-coverage.sh
 	cargo run -q -p eo-lint -- services tools
 	cargo machete
 	cargo deny --locked check

@@ -102,7 +102,7 @@ jobs:
           git diff --exit-code -- docs/patterns.md
 
   rust:
-    name: Rust (fmt, clippy, 100% coverage, eo-lint)
+    name: Rust (fmt, clippy, coverage, eo-lint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
