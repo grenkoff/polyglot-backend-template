@@ -2,11 +2,15 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 CORE := services/core
 COMPOSE := env UID=$(shell id -u) GID=$(shell id -g) docker compose
+PYTHON_VERSION := $(shell cat $(CORE)/.python-version)
+POETRY_VERSION := $(shell sed -n "s/.*POETRY_VERSION=\([0-9.]*\).*/\1/p" $(CORE)/docker/django/Dockerfile)
 RUST_COVERAGE_IGNORE := '(^|/)(main|build)\.rs$$'
 
 .PHONY: help
 help:
 	@printf '%s\n' \
+	  'make doctor        check that the required tools are installed' \
+	  'make setup         install Node tooling, the Rust toolchain and the core venv' \
 	  'make env           create services/core/config/.env from the template' \
 	  'make proto         regenerate Python gRPC code from proto/' \
 	  'make patterns      regenerate docs/patterns.md from the code' \
@@ -21,6 +25,17 @@ help:
 	  'make e2e           check a request through every service' \
 	  'make commitlint    check commit messages (Conventional Commits)' \
 	  'make check         everything CI runs'
+
+.PHONY: doctor
+doctor:
+	./scripts/doctor.sh
+
+.PHONY: setup
+setup: env
+	npm ci --ignore-scripts
+	rustup show active-toolchain || rustup toolchain install
+	cd $(CORE) && POETRY_VIRTUALENVS_IN_PROJECT=true POETRY_VIRTUALENVS_USE_POETRY_PYTHON=true \
+	  uvx --python $(PYTHON_VERSION) poetry==$(POETRY_VERSION) sync
 
 .PHONY: env
 env:
