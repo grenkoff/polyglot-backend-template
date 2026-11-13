@@ -504,6 +504,16 @@ class Plain:
     }
 
     #[test]
+    fn lists_rust_traits_with_patterns() {
+        let code = "/// Strategy: one way to price an order.
+            trait Pricing { fn price(&self) -> u32; }";
+        assert_eq!(
+            Code::new("src/pricing.rs", code, Rust).entries().unwrap(),
+            vec![Entry::new("Strategy", "Pricing", "src/pricing.rs")]
+        );
+    }
+
+    #[test]
     fn rejects_unknown_pattern_names() {
         let rust = "/// Request for a greeting: a name and a flag.
             struct Request;
