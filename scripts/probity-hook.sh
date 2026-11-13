@@ -19,7 +19,7 @@ case "$(uname -s)" in
     ;;
 esac
 if [[ -z "$disabled" && ! -x "$probity" ]]; then
-  disabled="TDD guard (Probity) is OFF: run 'npm install' in the repository root to enable it."
+  disabled="TDD guard (Probity) is OFF: run 'make setup' in the repository root to enable it."
 fi
 
 if [[ "${1:-}" == '--status' ]]; then
