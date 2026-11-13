@@ -42,10 +42,6 @@ root project
   to be used for the project, particularly when using ``pyenv``.
   This file helps in maintaining a consistent Python environment
   across different machines and environments
-- ``CHANGELOG.md`` - file that contains a chronological
-  log of all notable changes made to the project. It provides
-  a comprehensive overview of the project's evolution and
-  helps users and contributors understand the development history
 - ``docker-compose.yml`` - this file specifies ``docker`` services
   that are needed for development and testing
 - ``docker-compose.override.yml`` - local override for ``docker-compose``.
