@@ -11,7 +11,7 @@ publish.workspace = true
 anyhow.workspace = true
 async-nats.workspace = true
 axum.workspace = true
-contracts = { path = "../../contracts" }
+contracts.workspace = true
 prost.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
@@ -20,9 +20,9 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 [dev-dependencies]
-futures = "0.3.34"
-testcontainers-modules = { version = "0.15.0", features = ["nats"] }
-tower = { version = "0.5", features = ["util"] }
+futures.workspace = true
+testcontainers-modules.workspace = true
+tower.workspace = true
 
 [lints]
 workspace = true

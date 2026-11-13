@@ -12,14 +12,18 @@ publish = false
 anyhow = "1.0.104"
 async-nats = "0.52.0"
 axum = "0.8.9"
+contracts = { path = "contracts" }
+futures = "0.3.34"
 prost = "0.14.4"
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 syn = { version = "3", features = ["full", "visit", "extra-traits"] }
+testcontainers-modules = { version = "0.15.0", features = ["nats"] }
 thiserror = "2.0.21"
 tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal", "net"] }
 tonic = "0.14.9"
 tonic-prost = "0.14.9"
 tonic-prost-build = "0.14.9"
+tower = { version = "0.5.3", features = ["util"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 walkdir = "2.5.0"
