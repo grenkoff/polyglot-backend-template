@@ -935,8 +935,9 @@ Required tools (`make doctor` checks them and prints what is missing):
 | GNU Make | every command |
 | rustup (toolchain from `rust-toolchain.toml`) | Rust services and `eo-lint` |
 | cargo-llvm-cov, cargo-mutants, cargo-deny, cargo-machete | Rust checks |
+| protoc | builds the `contracts` crate from `proto/` |
 | uv | installs Python and Poetry for the editor environment |
-| Node.js LTS and npm | Probity, commitlint, jscpd |
+| Node.js (major version from `.nvmrc`, through nvm) and npm | Probity, commitlint, jscpd |
 | buf | contracts |
 | gitleaks | secret scanning |
 

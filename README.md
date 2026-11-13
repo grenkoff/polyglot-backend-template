@@ -19,6 +19,8 @@ checked by strict CI.
 ```bash
 gh repo create my-backend --template grenkoff/polyglot-backend-template --private --clone
 cd my-backend
+make doctor   # lists the tools that are missing
+make setup    # installs Node tooling, the Rust toolchain and the core venv
 make env      # creates services/core/config/.env
 make up       # starts everything on http://localhost:8000
 make e2e      # checks that a request goes through all services
@@ -54,25 +56,28 @@ exist, then delete them.
 
 | Job | What it checks |
 |-----|----------------|
+| secrets | gitleaks over the whole history |
 | commits | commit messages and pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), one line |
 | contracts | `buf lint`, `buf format`, breaking changes on pull requests, generated Python code is up to date |
-| rust | `cargo fmt`, clippy pedantic (warnings are errors), tests with 100% line coverage (cargo-llvm-cov), `eo-lint` |
+| rust | `cargo fmt`, clippy pedantic (warnings are errors), tests with 100% line coverage (cargo-llvm-cov), `eo-lint`, cargo-machete, cargo-deny |
 | rust-mutants | mutation testing with cargo-mutants: no mutant may survive |
 | core | the full wemake-django-template pipeline: ruff, wemake-python-styleguide, import-linter, mypy, pytest with 100% coverage, schemathesis + tracecov, Django deploy checks, migration linters, deptry, codespell, typos, yamllint; mutation testing with mutmut; plus [ty](https://github.com/astral-sh/ty) as a second, non-blocking type checker |
+| tooling | `npm audit`, jscpd (duplicated Python and Rust code) |
 | e2e | `docker compose up` and a request through every service |
 
 ## Test-driven development
 
 Code is written test-first, see [docs/tdd.md](docs/tdd.md). For AI agents
 it is enforced by the [Probity](https://github.com/nizos/probity) hook
-(`npm install` once, then run the agent where the code lives); for
+(`make setup` once, then run the agent where the code lives); for
 everyone by 100% coverage and mutation testing in CI.
 
 ## Requirements
 
-Linux, macOS or WSL2 with Docker, Rust (`rustup`, plus
-`cargo install cargo-llvm-cov cargo-mutants`), `protoc`,
-[uv](https://docs.astral.sh/uv/) and Node.js 22+ (for the TDD hook).
+Linux, macOS or WSL2 with Docker, Rust (`rustup`), `protoc`,
+[uv](https://docs.astral.sh/uv/), Node.js from [`.nvmrc`](.nvmrc), buf,
+gitleaks and the cargo tools listed in [`AGENTS.md`](AGENTS.md#developer-environment).
+`make doctor` says what is missing.
 
 ## Documentation
 
