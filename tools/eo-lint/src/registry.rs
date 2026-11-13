@@ -2,7 +2,7 @@
 
 use syn::spanned::Spanned;
 use syn::visit::Visit;
-use syn::{Attribute, Expr, ExprLit, ItemEnum, ItemFn, ItemStruct, Lit, Meta};
+use syn::{Attribute, Expr, ExprLit, ItemEnum, ItemFn, ItemStruct, ItemTrait, Lit, Meta};
 use walkdir::WalkDir;
 
 use std::fmt;
@@ -175,6 +175,11 @@ impl<'ast> Visit<'ast> for Catalogue<'_> {
     }
 
     fn visit_item_enum(&mut self, node: &'ast ItemEnum) {
+        self.claims
+            .extend(Documentation::new(&node.attrs).claim(&node.ident, self.file));
+    }
+
+    fn visit_item_trait(&mut self, node: &'ast ItemTrait) {
         self.claims
             .extend(Documentation::new(&node.attrs).claim(&node.ident, self.file));
     }
