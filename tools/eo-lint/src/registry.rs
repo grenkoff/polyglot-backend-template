@@ -568,6 +568,28 @@ class Plain:
     }
 
     #[test]
+    fn rejects_unknown_pattern_names_in_enums_traits_and_modules() {
+        let error = |code: &str| {
+            Code::new("src/walk.rs", code, Rust)
+                .entries()
+                .map_err(|error| error.to_string())
+        };
+        let unknown = || {
+            Err::<Vec<Entry>, _>(String::from(
+                "src/walk.rs:1: `Visitor` is not a known pattern",
+            ))
+        };
+        assert_eq!(
+            [
+                error("/// Visitor: walks the tree.\nenum Walk { Up, Down }"),
+                error("/// Visitor: walks the tree.\ntrait Walk {}"),
+                error("//! Visitor: walks the tree.\nstruct Plain;"),
+            ],
+            [unknown(), unknown(), unknown()]
+        );
+    }
+
+    #[test]
     fn rejects_unknown_pattern_names() {
         let rust = "/// Request for a greeting: a name and a flag.
             struct Request;
