@@ -519,6 +519,24 @@ class Plain:
     }
 
     #[test]
+    fn lists_rust_modules_with_patterns() {
+        let code = "//! Facade: one door to the greetings.
+            struct Plain;";
+        assert_eq!(
+            [
+                Code::new("src/greetings.rs", code, Rust).entries().unwrap(),
+                Code::new("src/domain/mod.rs", code, Rust)
+                    .entries()
+                    .unwrap(),
+            ],
+            [
+                vec![Entry::new("Facade", "greetings", "src/greetings.rs")],
+                vec![Entry::new("Facade", "domain", "src/domain/mod.rs")],
+            ]
+        );
+    }
+
+    #[test]
     fn rejects_unknown_pattern_names() {
         let rust = "/// Request for a greeting: a name and a flag.
             struct Request;
