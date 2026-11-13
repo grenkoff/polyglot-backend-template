@@ -147,6 +147,16 @@ impl<'a> Documentation<'a> {
             .name()
             .map(|name| (name.to_owned(), line))
     }
+
+    /// Returns the claim of the named object in the file, if its documentation names a pattern.
+    fn claim(&self, object: &impl fmt::Display, file: &str) -> Option<Claim> {
+        self.name().map(|(pattern, line)| Claim {
+            pattern,
+            object: object.to_string(),
+            file: file.to_owned(),
+            line,
+        })
+    }
 }
 
 /// Visitor that collects the items whose documentation starts like a pattern name.
@@ -160,36 +170,18 @@ struct Catalogue<'a> {
 
 impl<'ast> Visit<'ast> for Catalogue<'_> {
     fn visit_item_struct(&mut self, node: &'ast ItemStruct) {
-        if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
-            self.claims.push(Claim {
-                pattern,
-                object: node.ident.to_string(),
-                file: self.file.to_owned(),
-                line,
-            });
-        }
+        self.claims
+            .extend(Documentation::new(&node.attrs).claim(&node.ident, self.file));
     }
 
     fn visit_item_enum(&mut self, node: &'ast ItemEnum) {
-        if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
-            self.claims.push(Claim {
-                pattern,
-                object: node.ident.to_string(),
-                file: self.file.to_owned(),
-                line,
-            });
-        }
+        self.claims
+            .extend(Documentation::new(&node.attrs).claim(&node.ident, self.file));
     }
 
     fn visit_item_fn(&mut self, node: &'ast ItemFn) {
-        if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
-            self.claims.push(Claim {
-                pattern,
-                object: node.sig.ident.to_string(),
-                file: self.file.to_owned(),
-                line,
-            });
-        }
+        self.claims
+            .extend(Documentation::new(&node.attrs).claim(&node.sig.ident, self.file));
     }
 }
 
