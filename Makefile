@@ -24,6 +24,8 @@ help:
 	  'make down          stop the whole system' \
 	  'make e2e           check a request through every service' \
 	  'make commitlint    check commit messages (Conventional Commits)' \
+	  'make changelog     write CHANGELOG.md for VERSION=vYYYY.MM.DD (git-cliff)' \
+	  'make release-notes print the notes of the latest release' \
 	  'make check         everything CI runs'
 
 .PHONY: doctor
@@ -113,6 +115,15 @@ e2e: up
 .PHONY: commitlint
 commitlint:
 	npx --no-install commitlint --last --verbose
+
+.PHONY: changelog
+changelog:
+	@test -n "$(VERSION)" || { echo 'usage: make changelog VERSION=vYYYY.MM.DD'; exit 1; }
+	npx --no-install git-cliff --tag $(VERSION) --output CHANGELOG.md
+
+.PHONY: release-notes
+release-notes:
+	@npx --no-install git-cliff --latest --strip header
 
 .PHONY: check
 check: commitlint security duplicates rust core mutants e2e

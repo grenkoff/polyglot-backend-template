@@ -1,0 +1,44 @@
+[changelog]
+header = """
+# Changelog
+
+Every release of this project, built by `make changelog` from Conventional Commits.
+
+"""
+body = """
+{% if version %}\
+## {{ version }} ({{ timestamp | date(format="%Y-%m-%d") }})
+{% else %}\
+## Unreleased
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | split(pat=":") | last }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}\
+{% if commit.breaking %}**breaking**: {% endif %}\
+{{ commit.message | upper_first }}\
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+filter_commits = true
+protect_breaking_commits = true
+tag_pattern = '^v[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[0-9]+)?$'
+sort_commits = "oldest"
+commit_parsers = [
+  { message = '^chore\(release\)', skip = true },
+  { message = '^\w+\(deps\)', group = "5:Dependencies" },
+  { message = '^feat', group = "1:Features" },
+  { message = '^fix', group = "2:Bug fixes" },
+  { message = '^perf', group = "3:Performance" },
+  { message = '^refactor', group = "4:Refactoring" },
+  { message = '^docs', group = "6:Documentation" },
+  { message = '^build', group = "7:Build" },
+  { message = '^ci', group = "8:CI" },
+  { message = '^revert', group = "9:Reverts" },
+  { message = '.*', skip = true },
+]
