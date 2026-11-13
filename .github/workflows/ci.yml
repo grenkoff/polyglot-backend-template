@@ -79,27 +79,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: bufbuild/buf-action@v1
         with:
-          lint: true
-          format: true
-          breaking: ${{ github.event_name == 'pull_request' }}
-          breaking_against: ${{ github.event.repository.clone_url }}#branch=${{ github.base_ref }}
-          pr_comment: false
-          push: false
+          version: 1.75.0
+          setup_only: true
       - uses: astral-sh/setup-uv@v7
-      - name: Python code generated from proto/ is up to date
-        run: |
-          ./scripts/proto.sh
-          git add --intent-to-add services/core/server/contracts
-          git diff --exit-code -- services/core/server/contracts
       - name: Install toolchain from rust-toolchain.toml
         run: rustup show active-toolchain || rustup toolchain install
-      - name: docs/patterns.md is up to date
-        run: |
-          make patterns
-          git add --intent-to-add docs/patterns.md
-          git diff --exit-code -- docs/patterns.md
+      - run: make contracts
 
   rust:
     name: Rust (fmt, clippy, coverage, eo-lint)
