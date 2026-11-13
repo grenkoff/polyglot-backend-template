@@ -620,10 +620,14 @@ must work with the code that is currently in production.
 4. **Reversible** where feasible (Django `reverse_code`, sqlx `down`
    files); an irreversible migration is a decision to ask the human about.
 5. **Short locks**: every migration runs with `lock_timeout = 5s` and a
-   statement timeout; a large backfill raises its own `lock_timeout` for
-   its transaction. A migration that fails on `lock_timeout` is the right
-   outcome: retry the deploy instead of blocking production. Before
-   dropping a table, drop its foreign keys to busy tables first.
+   statement timeout. In `core` every database connection has them
+   (`DJANGO_DATABASE_LOCK_TIMEOUT`, `DJANGO_DATABASE_STATEMENT_TIMEOUT`);
+   a sqlx migration starts with `SET LOCAL lock_timeout = '5s'` and
+   `SET LOCAL statement_timeout`. A large backfill raises its own limits
+   for its transaction with `SET LOCAL`. A migration that fails on
+   `lock_timeout` is the right outcome: retry the deploy instead of
+   blocking production. Before dropping a table, drop its foreign keys to
+   busy tables first.
 6. **One head**: two migrations with the same parent break the deploy.
    `makemigrations --check` in CI catches it; resolve with
    `makemigrations --merge` before merging into `develop`.
