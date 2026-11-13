@@ -66,6 +66,7 @@ run_ci () {
 
   # Running tests:
   pytest
+  coverage report --include='server/apps/*/logic/*' --fail-under=100
 
   # Run checks to be sure we follow all django's best practices:
   python manage.py check --fail-level WARNING
