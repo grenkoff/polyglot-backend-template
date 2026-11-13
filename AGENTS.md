@@ -288,7 +288,8 @@ Forbidden by Elegant Objects, use instead:
 Where patterns are recorded:
 
 - An object that implements a pattern starts its one-line docstring
-  (`///` in Rust) with the pattern name:
+  with the pattern name: a Python module or class; in Rust the `///` of
+  a struct, an enum, a trait or a function, or the `//!` of a module:
   `/// Decorator: adds a polite ending to another greeting.`
 - Allowed names: Decorator, Strategy, Adapter, Facade, Factory, Observer,
   State, Command, Composition root.
