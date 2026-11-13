@@ -2,7 +2,7 @@
 
 Every release of this project, built by `make changelog` from Conventional Commits.
 
-## v2026.11.13 (2026-11-13)
+## v2026.11.14
 
 ### Features
 
@@ -81,6 +81,8 @@ Every release of this project, built by `make changelog` from Conventional Commi
 - **deps**: Bump python from 3.14.8 to 3.14.9 (#6)
 - **deps**: Bump syn from 2.0.119 to 3.0.9 (#5)
 - **deps**: Bump filelock and certifi to fixed versions
+- **deps**: Bump opentelemetry-api from 1.45.1 to 1.45.2
+- **deps**: Bump dnspython from 2.9.0 to 2.9.2
 
 ### Documentation
 
@@ -125,6 +127,7 @@ Every release of this project, built by `make changelog` from Conventional Commi
 - Check contracts with buf in make proto and add make contracts
 - **hello**: Take every dependency from the workspace
 - **hello**: Drop the comments and directives from the dockerfile
+- Title each changelog release by its calendar version alone
 
 ### CI
 
