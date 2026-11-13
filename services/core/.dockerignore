@@ -90,3 +90,5 @@ pip-audit-cache/
 
 # kira-release script
 release.config.js
+
+.venv/
