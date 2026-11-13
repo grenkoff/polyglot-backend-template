@@ -2,7 +2,7 @@
 
 use syn::spanned::Spanned;
 use syn::visit::Visit;
-use syn::{Attribute, Expr, ExprLit, ItemFn, ItemStruct, Lit, Meta};
+use syn::{Attribute, Expr, ExprLit, ItemEnum, ItemFn, ItemStruct, Lit, Meta};
 use walkdir::WalkDir;
 
 use std::fmt;
@@ -160,6 +160,17 @@ struct Catalogue<'a> {
 
 impl<'ast> Visit<'ast> for Catalogue<'_> {
     fn visit_item_struct(&mut self, node: &'ast ItemStruct) {
+        if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
+            self.claims.push(Claim {
+                pattern,
+                object: node.ident.to_string(),
+                file: self.file.to_owned(),
+                line,
+            });
+        }
+    }
+
+    fn visit_item_enum(&mut self, node: &'ast ItemEnum) {
         if let Some((pattern, line)) = Documentation::new(&node.attrs).name() {
             self.claims.push(Claim {
                 pattern,
