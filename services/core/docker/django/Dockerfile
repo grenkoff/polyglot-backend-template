@@ -2,7 +2,7 @@
 # This Dockerfile uses multi-stage build to customize DEV and PROD images:
 # https://docs.docker.com/develop/develop-images/multistage-build/
 
-FROM python:3.14.9-slim-bookworm AS development_build
+FROM python:3.14.10-slim-bookworm AS development_build
 
 LABEL maintainer="example.com"
 LABEL vendor="example.com"
