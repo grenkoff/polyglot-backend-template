@@ -5,6 +5,7 @@ COMPOSE := env UID=$(shell id -u) GID=$(shell id -g) docker compose
 PYTHON_VERSION := $(shell cat $(CORE)/.python-version)
 POETRY_VERSION := $(shell sed -n "s/.*POETRY_VERSION=\([0-9.]*\).*/\1/p" $(CORE)/docker/django/Dockerfile)
 RUST_COVERAGE_IGNORE := '(^|/)(main|build)\.rs$$'
+GENERATED := $(CORE)/server/contracts docs/patterns.md
 
 .PHONY: help
 help:
@@ -12,8 +13,9 @@ help:
 	  'make doctor        check that the required tools are installed' \
 	  'make setup         install Node tooling, the Rust toolchain and the core venv' \
 	  'make env           create services/core/config/.env from the template' \
-	  'make proto         regenerate Python gRPC code from proto/' \
+	  'make proto         buf lint and format, regenerate Python gRPC code from proto/' \
 	  'make patterns      regenerate docs/patterns.md from the code' \
+	  'make contracts     proto, patterns, buf breaking against develop, no diff' \
 	  'make rust          fmt, clippy, tests, coverage (80%, 100% in domain), eo-lint, cargo-deny' \
 	  'make core          wemake-django-template CI for core in Docker' \
 	  'make ty            second type checker for core (non-blocking)' \
@@ -48,7 +50,15 @@ env:
 
 .PHONY: proto
 proto:
+	buf lint
+	buf format --diff --exit-code
 	./scripts/proto.sh
+
+.PHONY: contracts
+contracts: proto patterns
+	buf breaking --against "$$(git rev-parse --path-format=absolute --git-common-dir)#ref=origin/develop"
+	git add --intent-to-add $(GENERATED)
+	git diff --exit-code -- $(GENERATED)
 
 .PHONY: patterns
 patterns:
@@ -126,5 +136,5 @@ release-notes:
 	@npx --no-install git-cliff --latest --strip header
 
 .PHONY: check
-check: commitlint security duplicates rust core mutants e2e
+check: commitlint security contracts duplicates rust core mutants e2e
 	$(MAKE) down
