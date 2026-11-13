@@ -1,8 +1,6 @@
-# syntax = docker/dockerfile:1
 
 FROM rust:1-slim-bookworm AS build
 
-# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get install --no-install-recommends -y protobuf-compiler \
   && rm -rf /var/lib/apt/lists/*
@@ -22,7 +20,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM debian:bookworm-slim AS runtime
 
-# hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get install --no-install-recommends -y ca-certificates curl \
   && rm -rf /var/lib/apt/lists/* \
