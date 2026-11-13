@@ -8,7 +8,7 @@ checked by strict CI.
 | | |
 |---|---|
 | Main service | Django from [wemake-django-template](https://github.com/wemake-services/wemake-django-template), API on [django-modern-rest](https://github.com/wemake-services/django-modern-rest) |
-| Python style | [wemake-python-styleguide](https://github.com/wemake-services/wemake-python-styleguide), ruff, mypy strict, 100% coverage, schemathesis |
+| Python style | [wemake-python-styleguide](https://github.com/wemake-services/wemake-python-styleguide), ruff, mypy strict, coverage (100% of domain logic), schemathesis |
 | Other services | Rust: [axum](https://github.com/tokio-rs/axum), [tonic](https://github.com/hyperium/tonic), [async-nats](https://github.com/nats-io/nats.rs) |
 | Rust style | Elegant Objects on 100%: clippy pedantic + [`eo-lint`](tools/eo-lint) |
 | Communication | gRPC contracts in [`proto/`](proto) ([buf](https://buf.build)), events over [NATS](https://nats.io) |
@@ -59,9 +59,9 @@ exist, then delete them.
 | secrets | gitleaks over the whole history |
 | commits | commit messages and pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), one line |
 | contracts | `buf lint`, `buf format`, breaking changes on pull requests, generated Python code is up to date |
-| rust | `cargo fmt`, clippy pedantic (warnings are errors), tests with 100% line coverage (cargo-llvm-cov), `eo-lint`, cargo-machete, cargo-deny |
+| rust | `cargo fmt`, clippy pedantic (warnings are errors), tests with line coverage of 80% overall and 100% in `src/domain/` (cargo-llvm-cov), `eo-lint`, cargo-machete, cargo-deny |
 | rust-mutants | mutation testing with cargo-mutants: no mutant may survive |
-| core | the full wemake-django-template pipeline: ruff, wemake-python-styleguide, import-linter, mypy, pytest with 100% coverage, schemathesis + tracecov, Django deploy checks, migration linters, deptry, codespell, typos, yamllint; mutation testing with mutmut; plus [ty](https://github.com/astral-sh/ty) as a second, non-blocking type checker |
+| core | the full wemake-django-template pipeline: ruff, wemake-python-styleguide, import-linter, mypy, pytest with coverage of 80% overall and 100% in `logic/`, schemathesis + tracecov, Django deploy checks, migration linters, deptry, codespell, typos, yamllint; mutation testing with mutmut; plus [ty](https://github.com/astral-sh/ty) as a second, non-blocking type checker |
 | tooling | `npm audit`, jscpd (duplicated Python and Rust code) |
 | e2e | `docker compose up` and a request through every service |
 
@@ -70,7 +70,7 @@ exist, then delete them.
 Code is written test-first, see [docs/tdd.md](docs/tdd.md). For AI agents
 it is enforced by the [Probity](https://github.com/nizos/probity) hook
 (`make setup` once, then run the agent where the code lives); for
-everyone by 100% coverage and mutation testing in CI.
+everyone by coverage gates and mutation testing in CI.
 
 ## Requirements
 
