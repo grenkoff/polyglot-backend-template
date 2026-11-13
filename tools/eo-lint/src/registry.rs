@@ -491,6 +491,16 @@ class Plain:
     }
 
     #[test]
+    fn lists_rust_enums_with_patterns() {
+        let code = "/// State: an order that is open or closed.
+            enum Order { Open, Closed }";
+        assert_eq!(
+            Code::new("src/order.rs", code, Rust).entries().unwrap(),
+            vec![Entry::new("State", "Order", "src/order.rs")]
+        );
+    }
+
+    #[test]
     fn rejects_unknown_pattern_names() {
         let rust = "/// Request for a greeting: a name and a flag.
             struct Request;
