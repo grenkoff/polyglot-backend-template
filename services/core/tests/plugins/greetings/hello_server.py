@@ -1,7 +1,6 @@
 """Fake hello services for the greetings tests."""
 
 import threading
-import time
 from collections.abc import Generator, Iterator
 from concurrent import futures
 from contextlib import contextmanager
@@ -16,6 +15,7 @@ from server.contracts.hello.v1 import hello_pb2, hello_pb2_grpc
 
 _SLOW_ANSWER: Final = 2
 _SHORT_TIMEOUT: Final = 0.2
+_GRACE: Final = 1
 
 
 @final
@@ -72,7 +72,7 @@ def _serving(
     try:
         yield f'127.0.0.1:{port}'
     finally:
-        server.stop(grace=None)
+        server.stop(grace=_GRACE).wait()
 
 
 @pytest.fixture
@@ -92,7 +92,6 @@ def hello_slow(settings: LazySettings) -> Iterator[str]:
         settings.HELLO_GRPC_TIMEOUT = _SHORT_TIMEOUT
         yield address
         released.set()
-        time.sleep(_SHORT_TIMEOUT)
 
 
 @pytest.fixture
