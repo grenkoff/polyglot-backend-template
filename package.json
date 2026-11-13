@@ -1,7 +1,7 @@
 {
   "name": "polyglot-backend-template-tooling",
   "private": true,
-  "description": "Developer tooling only: Probity enforces TDD for AI agents, commitlint enforces Conventional Commits, jscpd finds duplicated code. No JavaScript in the services.",
+  "description": "Developer tooling only: Probity enforces TDD for AI agents, commitlint enforces Conventional Commits, jscpd finds duplicated code, git-cliff writes the changelog. No JavaScript in the services.",
   "license": "MIT",
   "engines": {
     "node": ">=26"
@@ -10,6 +10,7 @@
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
     "@nizos/probity": "1.10.1",
+    "git-cliff": "2.14.2",
     "jscpd": "5.4.3"
   }
 }
