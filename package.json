@@ -4,7 +4,7 @@
   "description": "Developer tooling only: Probity enforces TDD for AI agents, commitlint enforces Conventional Commits, jscpd finds duplicated code. No JavaScript in the services.",
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.4",
