@@ -68,10 +68,11 @@ Example: `services/hello/`.
    service `<Name>Service`. Compile it in `contracts/build.rs` (add the
    file to `compile_protos`) and expose it in `contracts/src/lib.rs` as
    `pub mod <name> { pub mod v1 { tonic::include_proto!("<name>.v1"); } }`.
-2. `services/<name>/Cargo.toml` like the one of `hello`: dependencies from
-   the workspace (`.workspace = true`), `contracts = { path =
-   "../../contracts" }`, `[lints] workspace = true`. Add the crate to
-   `members` in the root `Cargo.toml`.
+2. `services/<name>/Cargo.toml` like the one of `hello`: every
+   dependency, `contracts` and dev-dependencies included, comes from
+   `[workspace.dependencies]` (`.workspace = true`), and
+   `[lints] workspace = true`. Add the crate to `members` in the root
+   `Cargo.toml`.
 3. Layers under `src/`: `domain/` (newtypes, traits, errors; no I/O, rule
    EO010), `infra/` (adapters to NATS, sqlx, gRPC clients, settings),
    `api/` (tonic and axum entrypoints), `lib.rs` exposing them, and
