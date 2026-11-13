@@ -45,7 +45,7 @@ Repeat. Each cycle takes minutes, not hours.
 | Check | Where | What it catches |
 |-------|-------|-----------------|
 | **Probity hook** (`probity.config.ts`, `.claude/settings.json`) | every file write of the AI agent | implementation written without a failing test first |
-| **100% coverage**: pytest-cov (Python), cargo-llvm-cov (Rust) | CI, `make check` | code that no test executes |
+| **Coverage**: pytest-cov (Python), cargo-llvm-cov (Rust); 100% in `logic/` and `src/domain/`, 80% overall | CI, `make check` | code that no test executes |
 | **Mutation testing**: mutmut (Python), cargo-mutants (Rust) | CI, `make mutants` | tests that execute code but would not notice if it broke |
 | schemathesis + tracecov | CI | API behaviour that differs from the OpenAPI schema |
 
@@ -62,7 +62,7 @@ whether the write follows red → green → refactor. Rules: `probity.config.ts`
 
 To turn it on:
 
-1. Install Node.js 22+ and run `npm install` in the repository root.
+1. Install Node.js from `.nvmrc` and run `make setup` in the repository root.
 2. Run the agent **where the code lives**: on Linux/macOS, or *inside* WSL
    on Windows (`claude` in the Ubuntu terminal, or VS Code with the WSL
    extension). Log the agent in there.
@@ -71,7 +71,7 @@ To turn it on:
    to `~/.codex/hooks.json`.
 
 `scripts/probity-hook.sh` reports at session start when the guard is off:
-when `npm install` was not run, or when Claude Code runs on Windows while
+when `make setup` was not run, or when Claude Code runs on Windows while
 the project is inside WSL. In that combination Probity cannot work
 correctly (Linux native modules, Linux paths), so the hook steps aside
 instead of blocking every write. Coverage and mutation testing in CI still
@@ -81,5 +81,6 @@ apply.
 
 The only code excluded from coverage and mutation testing is code that
 cannot be unit-tested by nature and is covered by `make e2e` instead:
-composition roots (`main.rs`) and network loops marked `# pragma: no cover`
-(for example `manage.py listen_greetings`).
+composition roots (`main.rs`, `build.rs`), excluded in the tool
+configuration (`RUST_COVERAGE_IGNORE` in the `Makefile`), never with a
+directive.
