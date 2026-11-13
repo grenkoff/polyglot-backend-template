@@ -820,8 +820,8 @@ as a pre-release).
 A release:
 
 1. Changelog: a branch `chore/release-<version>` from `develop`,
-   `make changelog` (git-cliff with `cliff.toml`, built from Conventional
-   Commits), a pull request to `develop`.
+   `make changelog VERSION=<version>` (git-cliff with `cliff.toml`, built
+   from Conventional Commits), a pull request to `develop`.
 2. A pull request from `develop` to `production`, titled
    `chore(release): <version>`.
 3. Its body lists every Issue finished since the previous release as
@@ -838,7 +838,7 @@ A release:
    merged.
 7. Tag and publish: `git tag <version>` on `production`, push it, and
    create a GitHub Release with the notes of this version
-   (`git cliff --latest`).
+   (`gh release create <version> --notes "$(make release-notes)"`).
 8. Check that every listed Issue is closed (`gh issue view <N> --json
    state`); close the rest by hand.
 
@@ -941,7 +941,7 @@ Required tools (`make doctor` checks them and prints what is missing):
 | cargo-llvm-cov, cargo-mutants, cargo-deny, cargo-machete | Rust checks |
 | protoc | builds the `contracts` crate from `proto/` |
 | uv | installs Python and Poetry for the editor environment |
-| Node.js (major version from `.nvmrc`, through nvm) and npm | Probity, commitlint, jscpd |
+| Node.js (major version from `.nvmrc`, through nvm) and npm | Probity, commitlint, jscpd, git-cliff |
 | buf | contracts |
 | gitleaks | secret scanning |
 
@@ -986,7 +986,8 @@ so local runs match CI.
 | `make logs` | follows the logs of the running system |
 | `make e2e` | starts the system and sends a request through every service |
 | `make commitlint` | checks the commits of the branch against Conventional Commits |
-| `make changelog` | updates `CHANGELOG.md` with git-cliff for the next release |
+| `make changelog VERSION=<version>` | writes `CHANGELOG.md` with git-cliff for the next release |
+| `make release-notes` | prints the notes of the latest release tag for the GitHub Release |
 | `make check` | everything CI runs, in the same order |
 
 A new routine action gets a target here and a line in this table in the
