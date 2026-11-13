@@ -7,7 +7,7 @@ Every release of this project, built by `make changelog` from Conventional Commi
 """
 body = """
 {% if version %}\
-## {{ version }} ({{ timestamp | date(format="%Y-%m-%d") }})
+## {{ version }}
 {% else %}\
 ## Unreleased
 {% endif %}\
